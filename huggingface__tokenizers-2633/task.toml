@@ -1,0 +1,62 @@
+version = "1.0"
+
+[task]
+name = "default/huggingface__tokenizers-2633"
+description = "fix(parallelism): don't build a pool when the lock is contended"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "tokenizers",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "huggingface/tokenizers"
+ref = "851b23022df19c6e5e1039f1f3c2a07bc3319c46"
+reference = "https://github.com/huggingface/tokenizers/pull/2633"
+source_access = "auto"
+built_at = "2026-11-12T05:39:43.535973+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:df71fa85db77e3fa83544d971a76716ff540a2414402a4881eae3178d631b3b5"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-06T10:18:07Z"
+diff_format = "unified"
+context_files = [
+    "tokenizers/tk-encode/src/utils/parallelism.rs",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 53
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

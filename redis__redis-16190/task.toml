@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/redis__redis-16190"
+description = "Fix undefined shifts in lua_cmsgpack int decoding"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "redis",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "redis/redis"
+ref = "5b69ba2ce91fea8e9fc70ebac8ce341b37e75533"
+reference = "https://github.com/redis/redis/pull/16190"
+source_access = "auto"
+built_at = "2026-11-12T05:48:13.448780+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:62bf064954f74d6c96406ab91d5759dfc028fc4717b182b9e7282b3419472340"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-12T04:39:09Z"
+diff_format = "unified"
+context_files = [
+    "deps/lua/src/lua_cmsgpack.c",
+    "tests/unit/scripting.tcl",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 34
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

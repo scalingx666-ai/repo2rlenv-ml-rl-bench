@@ -1,0 +1,65 @@
+version = "1.0"
+
+[task]
+name = "default/denoland__deno-37051"
+description = "fix(cli): list the lts channel in the deno upgrade usage"
+
+[metadata]
+difficulty = "easy"
+category = "bugfix"
+keywords = [
+    "deno",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "denoland/deno"
+ref = "9766cc5e3bc958d11f4fdb98ea841a47d13da8e4"
+reference = "https://github.com/denoland/deno/pull/37051"
+source_access = "auto"
+built_at = "2026-11-12T05:47:26.823340+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:190c5dee5471983749e5ad3ef24f4d4a22cb9096a6f56acf3c262b7535928747"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-10-21T20:41:41Z"
+diff_format = "unified"
+context_files = [
+    "cli/args/flags.rs",
+    "tests/specs/upgrade/invalid_version/canary.out",
+    "tests/specs/upgrade/invalid_version/shorthand.out",
+    "tests/specs/upgrade/invalid_version/version.out",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 4
+difficulty = "trivial"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

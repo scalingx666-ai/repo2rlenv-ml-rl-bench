@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/kubernetes__kubernetes-144031"
+description = "kubelet: prioritize resizes for preempting pods over nonpreempting pods"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "kubernetes",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "kubernetes/kubernetes"
+ref = "a7acb39400091b71950da0b4ea2453aacf0c80d4"
+reference = "https://github.com/kubernetes/kubernetes/pull/144031"
+source_access = "auto"
+built_at = "2026-11-12T05:46:18.237378+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:b965b2a03ca732dd74753b606313e3a3a6eec8c60365096e076788232a25f692"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-10T23:27:46Z"
+diff_format = "unified"
+context_files = [
+    "pkg/kubelet/allocation/allocation_manager.go",
+    "pkg/kubelet/allocation/allocation_manager_test.go",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 70
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

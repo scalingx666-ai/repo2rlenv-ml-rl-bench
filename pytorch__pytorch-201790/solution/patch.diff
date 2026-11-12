@@ -1,0 +1,58 @@
+diff --git a/test/distributed/test_c10d_nccl2.py b/test/distributed/test_c10d_nccl2.py
+index 79185d0ee4742..7c59941f322b8 100644
+--- a/test/distributed/test_c10d_nccl2.py
++++ b/test/distributed/test_c10d_nccl2.py
+@@ -293,6 +293,37 @@ def test_ephemeral_timeout(self) -> None:
+             time.sleep(0.1)
+         self.fail("ephemeral timeout was not reset after collective completion")
+ 
++    @requires_nccl()
++    @skip_if_lt_x_gpu(2)
++    def test_all_gather_zero_sized(self) -> None:
++        # All zero-sized outputs
++        input_empty = torch.empty(0, device=self.device)
++        outputs_empty = [
++            torch.empty(0, device=self.device) for _ in range(self.world_size)
++        ]
++        dist.all_gather(outputs_empty, input_empty)
++        for out in outputs_empty:
++            self.assertEqual(out.numel(), 0)
++
++        # Uneven gather where the first rank(s) have zero-sized tensors.
++        # Catches #199579 where zero-sized outputs both had null data_ptr and were
++        # misclassified as aliased.
++        sizes = [0, 4] if self.world_size == 2 else [0, 0] + [4] * (self.world_size - 2)
++        input_tensor = (
++            torch.empty(0, device=self.device)
++            if sizes[self.rank] == 0
++            else torch.full((sizes[self.rank],), float(self.rank), device=self.device)
++        )
++        outputs = [torch.empty(s, device=self.device) for s in sizes]
++        dist.all_gather(outputs, input_tensor)
++        for r, s in enumerate(sizes):
++            if s == 0:
++                self.assertEqual(outputs[r].numel(), 0)
++            else:
++                self.assertEqual(
++                    outputs[r], torch.full((s,), float(r), device=self.device)
++                )
++
+ 
+ class ProcessGroupNCCL2WorkLifetimeTest(MultiProcessTestCase):
+     @property
+diff --git a/torch/csrc/distributed/c10d/nccl2/ProcessGroupNCCLBackend.cpp b/torch/csrc/distributed/c10d/nccl2/ProcessGroupNCCLBackend.cpp
+index f4b60ed1f0457..d691078742032 100644
+--- a/torch/csrc/distributed/c10d/nccl2/ProcessGroupNCCLBackend.cpp
++++ b/torch/csrc/distributed/c10d/nccl2/ProcessGroupNCCLBackend.cpp
+@@ -568,7 +568,10 @@ c10::intrusive_ptr<::c10d::Work> ProcessGroupNCCL::allgather(
+   auto timeout = operationTimeout(opts.timeout);
+ 
+   // Fast path: distinct per-rank output buffers -> list-based all_gather.
+-  bool aliased = outputList.size() > 1 &&
++  // Note: Two distinct zero-element tensors both return data_ptr() == nullptr,
++  // so null data pointers must not be treated as aliased.
++  bool aliased = outputList.size() > 1 && outputList[0].numel() > 0 &&
++      outputList[1].numel() > 0 && outputList[0].data_ptr() != nullptr &&
+       outputList[0].data_ptr() == outputList[1].data_ptr();
+   if (!aliased) {
+     auto work = all_gather(outputList, input, opts.asyncOp, timeout);

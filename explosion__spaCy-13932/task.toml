@@ -1,0 +1,64 @@
+version = "1.0"
+
+[task]
+name = "default/explosion__spaCy-13932"
+description = "Fix memory_zone cleanup on exception"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "spaCy",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "explosion/spaCy"
+ref = "453732d32d55029ea9787ef737c8cf8d626f45b0"
+reference = "https://github.com/explosion/spaCy/pull/13932"
+source_access = "auto"
+built_at = "2026-11-12T05:40:02.425409+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:c746ad5cf939e7d1363e9d0f4c50901303392591dd32a17d6b0c467ea0751fd2"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-03-15T10:29:09Z"
+diff_format = "unified"
+context_files = [
+    "spacy/strings.pyx",
+    "spacy/tests/vocab_vectors/test_memory_zone.py",
+    "spacy/vocab.pyx",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 43
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

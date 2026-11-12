@@ -1,0 +1,64 @@
+version = "1.0"
+
+[task]
+name = "default/langchain-ai__langchain-41778"
+description = "release(langchain): 1.4.10"
+
+[metadata]
+difficulty = "small"
+category = "bugfix"
+keywords = [
+    "langchain",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "langchain-ai/langchain"
+ref = "1a41b51b0295d7cc6df45cdede199b4a34649b1d"
+reference = "https://github.com/langchain-ai/langchain/pull/41778"
+source_access = "auto"
+built_at = "2026-11-12T05:32:40.354240+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:a906d36c9aaddb6d38b4c62c5ef4b0f896feb8c57e142e16f2e4b17b7a08bee5"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-10T18:34:18Z"
+diff_format = "unified"
+context_files = [
+    "libs/langchain_v1/langchain/__init__.py",
+    "libs/langchain_v1/pyproject.toml",
+    "libs/langchain_v1/uv.lock",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 14
+difficulty = "small"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

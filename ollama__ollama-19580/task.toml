@@ -1,0 +1,64 @@
+version = "1.0"
+
+[task]
+name = "default/ollama__ollama-19580"
+description = "windows: add CUDA 13.5 and SM 103 for ARM64"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "ollama",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "ollama/ollama"
+ref = "51e7030f9442e13e93a4a7880cd95ebad4112e49"
+reference = "https://github.com/ollama/ollama/pull/19580"
+source_access = "auto"
+built_at = "2026-11-12T05:32:55.755421+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:474e6c6dc86f83ea763d2b4f8759d762b7d597ad4be88053f94886359a2c9580"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-06T21:33:37Z"
+diff_format = "unified"
+context_files = [
+    ".github/workflows/release.yaml",
+    ".github/workflows/test-llamacpp-update.yaml",
+    "llama/server/CMakePresets.json",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 64
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

@@ -1,0 +1,212 @@
+diff --git a/packages/runtime-vapor/__tests__/vdomInterop.spec.ts b/packages/runtime-vapor/__tests__/vdomInterop.spec.ts
+index c3aae9dde61..5d2449c8a44 100644
+--- a/packages/runtime-vapor/__tests__/vdomInterop.spec.ts
++++ b/packages/runtime-vapor/__tests__/vdomInterop.spec.ts
+@@ -17443,3 +17443,143 @@ describe('vdom component given a ref in a v-bind object', () => {
+     expect(stripAnchors(vapor.after)).toBe(vdom.after)
+   })
+ })
++
++describe('moving an interop child that is active in a vapor KeepAlive', () => {
++  let calls: string[] = []
++  const leaf = (name: string) =>
++    defineComponent({
++      props: ['n'],
++      setup(props) {
++        onActivated(() => calls.push(`${name}:activated`))
++        onDeactivated(() => calls.push(`${name}:deactivated`))
++        return () => h('div', `${name}${props.n}`)
++      },
++    })
++  const V = leaf('V')
++  const W = leaf('W')
++  const vaporLeaf = (name: string) =>
++    compile(
++      `<script setup vapor>
++        import { onActivated, onDeactivated } from 'vue'
++        const log = _data.value
++        defineProps(['n'])
++        onActivated(() => log('${name}:activated'))
++        onDeactivated(() => log('${name}:deactivated'))
++      </script>
++      <template>
++        <div>${name}{{ n }}</div>
++      </template>`,
++      ref((s: string) => calls.push(s)),
++    )
++
++  // text and keep-alive hooks after each step, in a vdom app and a vapor app
++  async function run(
++    srcs: Record<string, string>,
++    makeData: () => Record<string, any>,
++    steps: Record<string, any>[],
++  ) {
++    const logs: Record<string, string[]> = { vdom: [], vapor: [] }
++    await renderParity(
++      srcs,
++      () => ref(makeData()),
++      async (data, root, mode) => {
++        await nextTick()
++        calls = []
++        for (const step of steps) {
++          Object.assign(data.value, step)
++          await nextTick()
++          logs[mode].push(`${root.textContent} [${calls.splice(0)}]`)
++        }
++      },
++      { V, W },
++    )
++    return logs
++  }
++
++  const nested = `<template>
++    <KeepAlive>
++      <components.Outer v-if="data.outer" />
++      <i v-else>off</i>
++    </KeepAlive>
++  </template>`
++  const roundTripThenOuter = [
++    { on: false },
++    { on: true, n: 2 },
++    { outer: false },
++    { outer: true },
++  ]
++
++  test('an outer KeepAlive deactivating it does not activate it first', async () => {
++    const { vdom, vapor } = await run(
++      {
++        Outer: `<template>
++          <KeepAlive>
++            <components.V v-if="data.on" :n="data.n" />
++            <components.W v-else :n="data.n" />
++          </KeepAlive>
++        </template>`,
++        App: nested,
++      },
++      () => ({ outer: true, on: true, n: 1 }),
++      roundTripThenOuter,
++    )
++    expect(vdom).toEqual([
++      'W1 [V:deactivated,W:activated]',
++      'V2 [W:deactivated,V:activated]',
++      'off [V:deactivated]',
++      'V2 [V:activated]',
++    ])
++    expect(vapor).toEqual(vdom)
++  })
++
++  test.each([
++    ['vdom', V, W],
++    ['vapor', vaporLeaf('V'), vaporLeaf('W')],
++  ])(
++    'an outer KeepAlive deactivating it as a vnode of a %s component does not activate it first',
++    async (_, v, w) => {
++      const { vdom, vapor } = await run(
++        {
++          Outer: `<template>
++          <KeepAlive>
++            <component :is="data.on ? data.v : data.w" :n="data.n" />
++          </KeepAlive>
++        </template>`,
++          App: nested,
++        },
++        () => ({ outer: true, on: true, n: 1, v: h(v), w: h(w) }),
++        roundTripThenOuter,
++      )
++      expect(vdom).toEqual([
++        'W1 [V:deactivated,W:activated]',
++        'V2 [W:deactivated,V:activated]',
++        'off [V:deactivated]',
++        'V2 [V:activated]',
++      ])
++      expect(vapor).toEqual(vdom)
++    },
++  )
++
++  test('reordering the rows it is the KeepAlive root of does not activate it', async () => {
++    const { vdom, vapor } = await run(
++      {
++        App: `<template>
++          <template v-for="i in data.list" :key="i">
++            <KeepAlive>
++              <components.V v-if="data.on" :n="i" />
++              <components.W v-else :n="i" />
++            </KeepAlive>
++          </template>
++        </template>`,
++      },
++      () => ({ list: [1, 2], on: true }),
++      [{ on: false }, { on: true }, { list: [2, 1] }],
++    )
++    expect(vdom).toEqual([
++      'W1W2 [V:deactivated,W:activated,V:deactivated,W:activated]',
++      'V1V2 [W:deactivated,V:activated,W:deactivated,V:activated]',
++      'V2V1 []',
++    ])
++    expect(vapor).toEqual(vdom)
++  })
++})
+diff --git a/packages/runtime-vapor/src/vdomInterop.ts b/packages/runtime-vapor/src/vdomInterop.ts
+index 8410a697992..3b0e5083b8f 100644
+--- a/packages/runtime-vapor/src/vdomInterop.ts
++++ b/packages/runtime-vapor/src/vdomInterop.ts
+@@ -1724,6 +1724,8 @@ function mountVNode(
+   // namespace over a component's render effect.
+   let namespace: ElementNamespace
+   let isUnmounted = false
++  // the vnode's keep-alive flag outlives the activation, and place() also moves
++  let isDeactivated = false
+   const unmount = (parentNode?: ParentNode, transition?: TransitionHooks) => {
+     // scope disposal and block removal can both reach this
+     if (isUnmounted) {
+@@ -1745,6 +1747,7 @@ function mountVNode(
+     ) {
+       const keepAliveCtx = (parentComponent as KeepAliveInstance).ctx
+       keepAliveCtx.clearCurrent!(frag)
++      isDeactivated = true
+       if (frag.inputScope) frag.inputScope.pause()
+       const storageContainer = keepAliveCtx.getStorageContainer()
+       if ((vnode.type as any).__vapor) {
+@@ -1795,10 +1798,8 @@ function mountVNode(
+     if (isHydrating) return
+     if (parentSuspense !== undefined) suspense = parentSuspense
+     const operationSuspense = suspense
+-    if (
+-      isKeepAliveEnabled &&
+-      vnode.shapeFlag & ShapeFlags.COMPONENT_KEPT_ALIVE
+-    ) {
++    if (isKeepAliveEnabled && isDeactivated) {
++      isDeactivated = false
+       // entering under the hooks resolved for this switch, as vdom sets them
+       // on every render: an in-out leave handed to them runs after the enter
+       if (isTransitionEnabled && transition) {
+@@ -2003,6 +2004,8 @@ function createVDOMComponent(
+   let refreshRefJob: SchedulerJob | undefined
+   let isMounted = false
+   let isUnmounted = false
++  // the vnode's keep-alive flag outlives the activation, and place() also moves
++  let isDeactivated = false
+   let cells: SlotSourceCell[] | undefined
+   const isolated = rawSlots && isolateSlotSources(rawSlots as RawSlots)
+   if (isolated) {
+@@ -2212,6 +2215,7 @@ function createVDOMComponent(
+       // pause the commit of the raw sources it reads from this Vapor parent.
+       if (frag.inputScope) frag.inputScope.pause()
+       keepAliveCtx!.clearCurrent!(frag)
++      isDeactivated = true
+       vdomDeactivate(
+         vnode,
+         keepAliveCtx!.getStorageContainer(),
+@@ -2253,10 +2257,8 @@ function createVDOMComponent(
+     if (isHydrating) return
+     if (parentSuspense !== undefined) suspense = parentSuspense
+     const operationSuspense = suspense
+-    if (
+-      isKeepAliveEnabled &&
+-      vnode.shapeFlag & ShapeFlags.COMPONENT_KEPT_ALIVE
+-    ) {
++    if (isKeepAliveEnabled && isDeactivated) {
++      isDeactivated = false
+       // An activated child re-enters with the inputs its parent holds now, so
+       // catch the commit up with the sources before activating.
+       if (frag.inputScope) frag.inputScope.resume()

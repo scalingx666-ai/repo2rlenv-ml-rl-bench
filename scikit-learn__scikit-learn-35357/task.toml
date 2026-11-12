@@ -1,0 +1,62 @@
+version = "1.0"
+
+[task]
+name = "default/scikit-learn__scikit-learn-35357"
+description = ":lock: :robot: CI Update lock files for scipy-dev CI build(s) :lock: :robot:"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "scikit-learn",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "scikit-learn/scikit-learn"
+ref = "79b01f685c868251bfbb5846e672a051ecd01e68"
+reference = "https://github.com/scikit-learn/scikit-learn/pull/35357"
+source_access = "auto"
+built_at = "2026-11-12T05:35:39.426573+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:9629fa2f39e242449d6ab779f3529ed3adefa0ee316b0fb099ca4cbc8ee49f1b"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-09T17:12:49Z"
+diff_format = "unified"
+context_files = [
+    "build_tools/github/pylatest_pip_scipy_dev_linux-64_conda.lock",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 27
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

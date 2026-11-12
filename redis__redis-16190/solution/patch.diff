@@ -1,0 +1,63 @@
+diff --git a/deps/lua/src/lua_cmsgpack.c b/deps/lua/src/lua_cmsgpack.c
+index 5f8929d454d..1865a031b14 100644
+--- a/deps/lua/src/lua_cmsgpack.c
++++ b/deps/lua/src/lua_cmsgpack.c
+@@ -628,10 +628,10 @@ void mp_decode_to_lua_type(lua_State *L, mp_cur *c) {
+     case 0xd2:  /* int 32 */
+         mp_cur_need(c,5);
+         lua_pushinteger(L,
+-            ((int32_t)c->p[1] << 24) |
+-            ((int32_t)c->p[2] << 16) |
+-            ((int32_t)c->p[3] << 8) |
+-             (int32_t)c->p[4]);
++            (int32_t)(((uint32_t)c->p[1] << 24) |
++                      ((uint32_t)c->p[2] << 16) |
++                      ((uint32_t)c->p[3] << 8) |
++                       (uint32_t)c->p[4]));
+         mp_cur_consume(c,5);
+         break;
+     case 0xcf:  /* uint 64 */
+@@ -654,14 +654,14 @@ void mp_decode_to_lua_type(lua_State *L, mp_cur *c) {
+ #else
+         lua_pushinteger(L,
+ #endif
+-            ((int64_t)c->p[1] << 56) |
+-            ((int64_t)c->p[2] << 48) |
+-            ((int64_t)c->p[3] << 40) |
+-            ((int64_t)c->p[4] << 32) |
+-            ((int64_t)c->p[5] << 24) |
+-            ((int64_t)c->p[6] << 16) |
+-            ((int64_t)c->p[7] << 8) |
+-             (int64_t)c->p[8]);
++            (int64_t)(((uint64_t)c->p[1] << 56) |
++                      ((uint64_t)c->p[2] << 48) |
++                      ((uint64_t)c->p[3] << 40) |
++                      ((uint64_t)c->p[4] << 32) |
++                      ((uint64_t)c->p[5] << 24) |
++                      ((uint64_t)c->p[6] << 16) |
++                      ((uint64_t)c->p[7] << 8) |
++                       (uint64_t)c->p[8]));
+         mp_cur_consume(c,9);
+         break;
+     case 0xc0:  /* nil */
+diff --git a/tests/unit/scripting.tcl b/tests/unit/scripting.tcl
+index c2df2166289..f22a8742815 100644
+--- a/tests/unit/scripting.tcl
++++ b/tests/unit/scripting.tcl
+@@ -592,6 +592,16 @@ start_server {tags {"scripting"}} {
+         } 0
+     } {d3ffffff0000000000}
+ 
++    test {EVAL - cmsgpack can unpack negative int32 and int64?} {
++        run_script {local i32 = cmsgpack.unpack(string.char(0xd2, 0x80, 0, 0, 0))
++                local i64 = cmsgpack.unpack(string.char(0xd3, 0x80, 0, 0, 0, 0, 0, 0, 0))
++                if i32 == -2147483648 and i64 == -9223372036854775808 then
++                    return 1
++                end
++                return 0
++        } 0
++    } {1}
++
+     test {EVAL - cmsgpack pack/unpack smoke test} {
+         run_script {
+                 local str_lt_32 = string.rep("x", 30)

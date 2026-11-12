@@ -1,0 +1,65 @@
+version = "1.0"
+
+[task]
+name = "default/ollama__ollama-19587"
+description = "launch: fix Claude Code routing and retired model errors"
+
+[metadata]
+difficulty = "large"
+category = "bugfix"
+keywords = [
+    "ollama",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "ollama/ollama"
+ref = "c053d1e98537f208b24165446369bd376a015999"
+reference = "https://github.com/ollama/ollama/pull/19587"
+source_access = "auto"
+built_at = "2026-11-12T05:32:54.416434+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:f22c31534195d0bc5c1320da3827ec92c9d9d0b2435f4f09038ebc7a16832958"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-07T02:28:13Z"
+diff_format = "unified"
+context_files = [
+    "cmd/launch/claude.go",
+    "cmd/launch/claude_test.go",
+    "cmd/launch/integrations_test.go",
+    "cmd/launch/models.go",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 124
+difficulty = "large"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

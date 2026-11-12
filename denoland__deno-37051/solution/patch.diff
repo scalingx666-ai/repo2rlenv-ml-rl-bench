@@ -1,0 +1,48 @@
+diff --git a/cli/args/flags.rs b/cli/args/flags.rs
+index 3ee84647162461..b952ba9c3fafb9 100644
+--- a/cli/args/flags.rs
++++ b/cli/args/flags.rs
+@@ -46,6 +46,7 @@ pub static UPGRADE_USAGE: &str = cstr!(
+ 
+ <g>Channel</>
+   <bold>deno upgrade</> <p(245)>stable</>
++  <bold>deno upgrade</> <p(245)>lts</>
+   <bold>deno upgrade</> <p(245)>alpha</>
+   <bold>deno upgrade</> <p(245)>beta</>
+   <bold>deno upgrade</> <p(245)>rc</>
+diff --git a/tests/specs/upgrade/invalid_version/canary.out b/tests/specs/upgrade/invalid_version/canary.out
+index 27cf3f03c8ee5f..21e7d40736e99f 100644
+--- a/tests/specs/upgrade/invalid_version/canary.out
++++ b/tests/specs/upgrade/invalid_version/canary.out
+@@ -13,6 +13,7 @@ Specific version
+ 
+ Channel
+   deno upgrade stable
++  deno upgrade lts
+   deno upgrade alpha
+   deno upgrade beta
+   deno upgrade rc
+diff --git a/tests/specs/upgrade/invalid_version/shorthand.out b/tests/specs/upgrade/invalid_version/shorthand.out
+index e2145ea199187d..c20726cc8bef9d 100644
+--- a/tests/specs/upgrade/invalid_version/shorthand.out
++++ b/tests/specs/upgrade/invalid_version/shorthand.out
+@@ -13,6 +13,7 @@ Specific version
+ 
+ Channel
+   deno upgrade stable
++  deno upgrade lts
+   deno upgrade alpha
+   deno upgrade beta
+   deno upgrade rc
+diff --git a/tests/specs/upgrade/invalid_version/version.out b/tests/specs/upgrade/invalid_version/version.out
+index e2145ea199187d..c20726cc8bef9d 100644
+--- a/tests/specs/upgrade/invalid_version/version.out
++++ b/tests/specs/upgrade/invalid_version/version.out
+@@ -13,6 +13,7 @@ Specific version
+ 
+ Channel
+   deno upgrade stable
++  deno upgrade lts
+   deno upgrade alpha
+   deno upgrade beta
+   deno upgrade rc

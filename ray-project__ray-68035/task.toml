@@ -1,0 +1,62 @@
+version = "1.0"
+
+[task]
+name = "default/ray-project__ray-68035"
+description = "[2.59.2][deps] Bump brotli to 1.2.1 in the large_image_embedding release lock"
+
+[metadata]
+difficulty = "large"
+category = "bugfix"
+keywords = [
+    "ray",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "ray-project/ray"
+ref = "09a98f4e2832f52d311ce20129dac80889d65ad1"
+reference = "https://github.com/ray-project/ray/pull/68035"
+source_access = "auto"
+built_at = "2026-11-12T05:34:18.112270+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:49c3c232807883d4c253e656629bcc45d35f5948c066f073a0e05275b23b39df"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-10T20:45:01Z"
+diff_format = "unified"
+context_files = [
+    "release/ray_release/byod/large_image_embedding_py3.10.lock",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 270
+difficulty = "large"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

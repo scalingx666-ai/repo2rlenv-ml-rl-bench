@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/mlflow__mlflow-27698"
+description = "Fix `search_issues` trace count failing on SQL Server (error 8120)"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "mlflow",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "mlflow/mlflow"
+ref = "781f028e82d1b3c31ad50f8cb8c41cfd9d6e8861"
+reference = "https://github.com/mlflow/mlflow/pull/27698"
+source_access = "auto"
+built_at = "2026-11-12T05:38:46.253826+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:8b12ca3c1e2d7cadc8a6c05fb571d2b01ca819124e855b9c887d87b6a640707b"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-12T00:19:06Z"
+diff_format = "unified"
+context_files = [
+    "mlflow/store/tracking/sqlalchemy_store.py",
+    "tests/db/test_tracking_operations.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 72
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

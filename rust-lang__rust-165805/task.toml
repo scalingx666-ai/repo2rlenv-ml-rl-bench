@@ -1,0 +1,62 @@
+version = "1.0"
+
+[task]
+name = "default/rust-lang__rust-165805"
+description = "Replace `match_span_kind` macro with `SpanKind`"
+
+[metadata]
+difficulty = "large"
+category = "bugfix"
+keywords = [
+    "rust",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "rust-lang/rust"
+ref = "9de746938314271db6dbb62dc3b4f07288d07d54"
+reference = "https://github.com/rust-lang/rust/pull/165805"
+source_access = "auto"
+built_at = "2026-11-12T05:47:03.563570+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:4464840b491aac3084cc6eb9a02876a4b55f89b3965e0cd10216bbd6fc56a93c"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-11T21:09:03Z"
+diff_format = "unified"
+context_files = [
+    "compiler/rustc_span/src/span_encoding.rs",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 125
+difficulty = "large"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

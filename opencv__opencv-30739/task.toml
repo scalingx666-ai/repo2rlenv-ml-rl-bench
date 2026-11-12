@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/opencv__opencv-30739"
+description = "imgproc: fix stackBlur on sub-matrices and in place"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "opencv",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "opencv/opencv"
+ref = "55ff746075718ec2d7cfe09b106c070555f3dbff"
+reference = "https://github.com/opencv/opencv/pull/30739"
+source_access = "auto"
+built_at = "2026-11-12T05:43:07.542621+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:2a764cd13980989509d871cd0605ae1ff8833d63989ff995e4991a21ae1ece73"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-11T09:14:47Z"
+diff_format = "unified"
+context_files = [
+    "modules/imgproc/src/stackblur.cpp",
+    "modules/imgproc/test/test_stackblur.cpp",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 77
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

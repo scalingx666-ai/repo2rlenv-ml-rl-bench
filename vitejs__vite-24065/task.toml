@@ -1,0 +1,65 @@
+version = "1.0"
+
+[task]
+name = "default/vitejs__vite-24065"
+description = "chore: revert \"fix(build): keep `magicString` and `ast` in transform hook meta (#24012)\""
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "vite",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "vitejs/vite"
+ref = "e4ad62ba6523e889f988b6e882d9d81be7f26711"
+reference = "https://github.com/vitejs/vite/pull/24065"
+source_access = "auto"
+built_at = "2026-11-12T05:47:41.201913+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:57760d31ecfc7d0972640f70615f3bb865297c87b3d7d86ecbafe953f6e7cfab"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-11T01:54:37Z"
+diff_format = "unified"
+context_files = [
+    "packages/vite/rolldown.dts.config.ts",
+    "packages/vite/src/node/__tests__/build.spec.ts",
+    "packages/vite/src/node/build.ts",
+    "packages/vite/src/node/plugin.ts",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 74
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

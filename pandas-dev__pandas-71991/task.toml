@@ -1,0 +1,64 @@
+version = "1.0"
+
+[task]
+name = "default/pandas-dev__pandas-71991"
+description = "BUG: to_numeric(errors='coerce') on ArrowDtype strings stored NaN ins…"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "pandas",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "pandas-dev/pandas"
+ref = "0e93a6884748a269ead954a6acc731fe9c080993"
+reference = "https://github.com/pandas-dev/pandas/pull/71991"
+source_access = "auto"
+built_at = "2026-11-12T05:37:38.811746+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:4b2980342147e57974552c8b03dcaade0f71995032382acb99e11e7abe2be8f7"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-10T22:22:30Z"
+diff_format = "unified"
+context_files = [
+    "doc/source/whatsnew/v3.2.0.rst",
+    "pandas/core/tools/numeric.py",
+    "pandas/tests/tools/test_to_numeric.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 31
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

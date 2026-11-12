@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/django__django-22241"
+description = "Fixed #37469 -- Made psycopg adapter UTF8Dumper handle None"
+
+[metadata]
+difficulty = "easy"
+category = "bugfix"
+keywords = [
+    "django",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "django/django"
+ref = "2382f40aed50332d2325563ea9097853561d45e8"
+reference = "https://github.com/django/django/pull/22241"
+source_access = "auto"
+built_at = "2026-11-12T05:42:02.089101+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:d65c2afea18c2d6d0029edf12c996c1f369bed514b9ed513d1a9a2fd3bce5ebf"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-03T21:03:16Z"
+diff_format = "unified"
+context_files = [
+    "django/contrib/postgres/search.py",
+    "tests/postgres_tests/test_search.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 3
+difficulty = "trivial"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

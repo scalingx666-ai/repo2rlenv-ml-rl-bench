@@ -1,0 +1,64 @@
+version = "1.0"
+
+[task]
+name = "default/facebook__react-38132"
+description = "Fix: Infinite loop caused by uDV + suspended hydration or retry"
+
+[metadata]
+difficulty = "large"
+category = "bugfix"
+keywords = [
+    "react",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "facebook/react"
+ref = "5b6109643a00e2681499234fd328d16c966deae4"
+reference = "https://github.com/react/react/pull/38132"
+source_access = "auto"
+built_at = "2026-11-12T05:45:18.954677+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:d90cac12ac9082e92967b396cfdb4c7368122adf93f1ff67cd1720eabe35bc11"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-06T19:43:47Z"
+diff_format = "unified"
+context_files = [
+    "packages/react-dom/src/__tests__/ReactDOMFizzDeferredValue-test.js",
+    "packages/react-reconciler/src/ReactFiberLane.js",
+    "packages/react-reconciler/src/__tests__/ReactDeferredValue-test.js",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 166
+difficulty = "large"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

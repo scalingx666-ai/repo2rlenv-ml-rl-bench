@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/pytorch__pytorch-201790"
+description = "[release/2.15] [c10d][nccl2] Do not treat zero-sized output tensors as aliased in all_gather"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "pytorch",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "pytorch/pytorch"
+ref = "ef10301d9fdf0feb4b2c81149d5b038a1b4b8094"
+reference = "https://github.com/pytorch/pytorch/pull/201790"
+source_access = "auto"
+built_at = "2026-11-12T05:32:00.177130+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:bab1c956470c93403b41914f40528aa3ef7318744525b5f81c7d9ac6e64c4d53"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-10-23T18:09:11Z"
+diff_format = "unified"
+context_files = [
+    "test/distributed/test_c10d_nccl2.py",
+    "torch/csrc/distributed/c10d/nccl2/ProcessGroupNCCLBackend.cpp",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 36
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

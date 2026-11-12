@@ -1,0 +1,62 @@
+version = "1.0"
+
+[task]
+name = "default/openai__whisper-2588"
+description = "Fixed triton kernel update to support latest triton versions"
+
+[metadata]
+difficulty = "small"
+category = "bugfix"
+keywords = [
+    "whisper",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "openai/whisper"
+ref = "5dff4db81ac1d9d1b08a4904c2e9f1b560d3d932"
+reference = "https://github.com/openai/whisper/pull/2588"
+source_access = "auto"
+built_at = "2026-11-12T05:33:18.955487+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:4f3e07309d5b37f76f01ba1eb599e25208783d644468e6bf573abde65e02aaa8"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2025-06-26T00:02:54Z"
+diff_format = "unified"
+context_files = [
+    "whisper/triton_ops.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 14
+difficulty = "small"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

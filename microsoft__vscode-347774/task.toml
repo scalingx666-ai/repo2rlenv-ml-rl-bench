@@ -1,0 +1,64 @@
+version = "1.0"
+
+[task]
+name = "default/microsoft__vscode-347774"
+description = "build: run only the tsec rules, without a second full type check"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "vscode",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "microsoft/vscode"
+ref = "10f3ce366d7b61910112a66a395d57b0c1f3cf0c"
+reference = "https://github.com/microsoft/vscode/pull/347774"
+source_access = "auto"
+built_at = "2026-11-12T05:45:59.994573+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:1ad9dc4f32635d145e0132588fd6c3e1c92a89b4a45d4df7564ce89f709c4299"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-12T01:09:23Z"
+diff_format = "unified"
+context_files = [
+    ".vscode/tasks.json",
+    "build/lib/tsec.ts",
+    "package.json",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 42
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

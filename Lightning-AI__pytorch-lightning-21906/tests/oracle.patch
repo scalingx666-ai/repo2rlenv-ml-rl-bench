@@ -1,0 +1,154 @@
+diff --git a/requirements/pytorch/extra.txt b/requirements/pytorch/extra.txt
+index 8e6e69b96f503..ca56329fa766c 100644
+--- a/requirements/pytorch/extra.txt
++++ b/requirements/pytorch/extra.txt
+@@ -5,7 +5,7 @@
+ matplotlib>3.1, <3.11.0
+ omegaconf >=2.2.3, <2.4.0
+ hydra-core >=1.2.0, <1.4.0
+-jsonargparse[signatures,jsonnet] >=4.39.0, <4.48.0
++jsonargparse[signatures,jsonnet] >=4.39.0, <4.51.0
+ rich >=12.3.0, <14.4.0
+ tensorboardX >=2.2, <2.7.0  # min version is set by torch.onnx missing attribute
+ bitsandbytes >=0.45.2,<0.50.0; platform_system != "Darwin"
+diff --git a/src/lightning/pytorch/CHANGELOG.md b/src/lightning/pytorch/CHANGELOG.md
+index 22181432e174d..6b3b10a1f3cd6 100644
+--- a/src/lightning/pytorch/CHANGELOG.md
++++ b/src/lightning/pytorch/CHANGELOG.md
+@@ -35,6 +35,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
+ 
+ ### Fixed
+ 
++- Fixed `LightningCLI` emitting `jsonargparse` deprecation warnings ([#21900](https://github.com/Lightning-AI/pytorch-lightning/issues/21900))
++
+ - Fixed `RichProgressBar` showing a nonsensical negative epoch total (e.g. `Epoch 5/-2`) when `Trainer(max_epochs=-1)` (unlimited epochs) is used and training stops via another condition ([#21925](https://github.com/Lightning-AI/pytorch-lightning/issues/21925))
+ 
+ - Fixed crash when calling ``self.log()`` inside a ``torch.compile``-wrapped ``LightningModule`` on PyTorch 2.12/2.13 by disabling Dynamo tracing at the ``LightningModule.log`` boundary ([#21836](https://github.com/Lightning-AI/pytorch-lightning/issues/21836))
+diff --git a/src/lightning/pytorch/cli.py b/src/lightning/pytorch/cli.py
+index 46ecbd16cb05a..e1ceb39112944 100644
+--- a/src/lightning/pytorch/cli.py
++++ b/src/lightning/pytorch/cli.py
+@@ -14,6 +14,7 @@
+ import inspect
+ import os
+ import sys
++import warnings
+ from collections.abc import Iterable
+ from functools import partial, update_wrapper
+ from pathlib import Path
+@@ -37,6 +38,10 @@
+ from lightning.pytorch.utilities.rank_zero import rank_zero_warn
+ 
+ _JSONARGPARSE_SIGNATURES_AVAILABLE = RequirementCache("jsonargparse[jsonnet,signatures]>=4.39")
++# 4.50 deprecated `ArgumentParser.instantiate_classes` in favor of `instantiate`, and the `skip_none` argument of
++# `dump`/`save` in favor of `skip_unset`. A single gate covers both: `instantiate` already exists in 4.49, while
++# `skip_unset` does not and would be silently swallowed by `**kwargs` there.
++_JSONARGPARSE_GREATER_EQUAL_4_50 = RequirementCache("jsonargparse>=4.50.0")
+ 
+ if _JSONARGPARSE_SIGNATURES_AVAILABLE:
+     import docstring_parser
+@@ -64,6 +69,15 @@
+ 
+ ModuleType = TypeVar("ModuleType")
+ 
++# both flags mean "drop entries whose value is unset", which for these parsers is `None`
++_KEEP_NONE_KWARGS: dict[str, bool] = {"skip_unset": False} if _JSONARGPARSE_GREATER_EQUAL_4_50 else {"skip_none": False}
++
++
++def _instantiate(parser: "ArgumentParser", cfg: "Namespace") -> "Namespace":
++    if _JSONARGPARSE_GREATER_EQUAL_4_50:
++        return parser.instantiate(cfg)
++    return parser.instantiate_classes(cfg)
++
+ 
+ class ReduceLROnPlateau(torch.optim.lr_scheduler.ReduceLROnPlateau):
+     """Custom ReduceLROnPlateau scheduler that extends PyTorch's ReduceLROnPlateau.
+@@ -288,7 +302,11 @@ def setup(self, trainer: Trainer, pl_module: LightningModule, stage: str) -> Non
+                 # but it hasn't logged anything at this point
+                 fs.makedirs(log_dir, exist_ok=True)
+                 self.parser.save(
+-                    self.config, config_path, skip_none=False, overwrite=self.overwrite, multifile=self.multifile
++                    self.config,
++                    config_path,
++                    overwrite=self.overwrite,
++                    multifile=self.multifile,
++                    **_KEEP_NONE_KWARGS,
+                 )
+ 
+         if trainer.is_global_zero:
+@@ -587,29 +605,35 @@ def _dump_config(self) -> None:
+         if hasattr(self, "config_dump"):
+             return
+         self.config_dump = yaml.safe_load(
+-            self.parser.dump(self.config, skip_link_targets=False, skip_none=False, format="yaml")
++            self.parser.dump(self.config, skip_link_targets=False, format="yaml", **_KEEP_NONE_KWARGS)
+         )
+         if "subcommand" in self.config:
+             self.config_dump = self.config_dump[self.config.subcommand]
+ 
+     def _add_instantiators(self) -> None:
+-        self.parser.add_instantiator(
+-            _InstantiatorFn(cli=self, key="model"),
+-            _get_module_type(self._model_class),
+-            subclasses=self.subclass_mode_model,
+-        )
+-        self.parser.add_instantiator(
+-            _InstantiatorFn(cli=self, key="data"),
+-            _get_module_type(self._datamodule_class),
+-            subclasses=self.subclass_mode_data,
+-        )
++        # the global `jsonargparse.add_instantiator` replacing this deprecated method registers process-wide, leaking
++        # into the parsers of every other `LightningCLI`, so the per-parser method is kept and its warning silenced
++        # TODO: revisit for jsonargparse v5.0, which removes the per-parser method
++        with warnings.catch_warnings():
++            # by category, since jsonargparse pairs the deprecation with a separate one-time banner warning
++            warnings.filterwarnings("ignore", category=DeprecationWarning)
++            self.parser.add_instantiator(
++                _InstantiatorFn(cli=self, key="model"),
++                _get_module_type(self._model_class),
++                subclasses=self.subclass_mode_model,
++            )
++            self.parser.add_instantiator(
++                _InstantiatorFn(cli=self, key="data"),
++                _get_module_type(self._datamodule_class),
++                subclasses=self.subclass_mode_data,
++            )
+ 
+     def before_instantiate_classes(self) -> None:
+         """Implement to run some code before instantiating the classes."""
+ 
+     def instantiate_classes(self) -> None:
+         """Instantiates the classes and sets their attributes."""
+-        self.config_init = self.parser.instantiate_classes(self.config)
++        self.config_init = _instantiate(self.parser, self.config)
+         self.datamodule = self._get(self.config_init, "data")
+         self.model = self._get(self.config_init, "model")
+         self._add_configure_optimizers_method_to_model(self.subcommand)
+@@ -901,5 +925,5 @@ def instantiate_module(class_type: type[ModuleType], config: dict[str, Any]) ->
+     else:
+         parser.add_class_arguments(class_type, "module", fail_untyped=False)
+     cfg = parser.parse_object({"module": config})
+-    init = parser.instantiate_classes(cfg)
++    init = _instantiate(parser, cfg)
+     return init.module
+diff --git a/tests/tests_pytorch/test_cli.py b/tests/tests_pytorch/test_cli.py
+index a6a95821cd39b..77a06d11936e7 100644
+--- a/tests/tests_pytorch/test_cli.py
++++ b/tests/tests_pytorch/test_cli.py
+@@ -36,6 +36,7 @@
+ from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
+ from lightning.pytorch.cli import (
+     _JSONARGPARSE_SIGNATURES_AVAILABLE,
++    _KEEP_NONE_KWARGS,
+     LightningArgumentParser,
+     LightningCLI,
+     LRSchedulerCallable,
+@@ -136,7 +137,7 @@ def fit(trainer, model):
+         save_callback[0].on_train_start(trainer, model)
+ 
+     def on_train_start(callback, trainer, _):
+-        config_dump = callback.parser.dump(callback.config, skip_none=False)
++        config_dump = callback.parser.dump(callback.config, **_KEEP_NONE_KWARGS)
+         for k, v in expected_model.items():
+             assert f"  {k}: {v}" in config_dump
+         for k, v in expected_trainer.items():

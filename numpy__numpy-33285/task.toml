@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/numpy__numpy-33285"
+description = "BUG: ufunc.at: raise on a non-writeable first operand"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "numpy",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "numpy/numpy"
+ref = "31a42aed238c22220453fbf9d41072163d57cfe1"
+reference = "https://github.com/numpy/numpy/pull/33285"
+source_access = "auto"
+built_at = "2026-11-12T05:38:03.501341+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:76ec8e0923b1e05ed22931c732283f1bf0e3a6f2829a0c996d03625faacf04ed"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-11T21:42:42Z"
+diff_format = "unified"
+context_files = [
+    "numpy/_core/src/umath/ufunc_object.c",
+    "numpy/_core/tests/test_ufunc.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 22
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

@@ -1,0 +1,121 @@
+diff --git a/.github/workflows/nix-changes.yml b/.github/workflows/nix-changes.yml
+index 85fba6798bc..e3e1f865396 100644
+--- a/.github/workflows/nix-changes.yml
++++ b/.github/workflows/nix-changes.yml
+@@ -65,6 +65,12 @@ jobs:
+ 
+       - name: Compute requisites after change
+         run: ./tools/nix/list-requisites.sh > requisites-${{ matrix.system }}-after.list
++        env:
++          # Making sure we do not depend on eval-time fetches, which are not cached.
++          # The only exception is nixpkgs source tarballs.
++          NIX_CONFIG: |
++            restrict-eval = true
++            allowed-uris = https://github.com/NixOS/nixpkgs/archive/
+ 
+       - name: Compute requisites before change
+         run: |
+diff --git a/tools/nix/ci-shell.nix b/tools/nix/ci-shell.nix
+index 65efc595a15..344cbaa80b2 100644
+--- a/tools/nix/ci-shell.nix
++++ b/tools/nix/ci-shell.nix
+@@ -46,13 +46,17 @@ args@{
+           )
+         }-pkg-config-only"
+         {
++          __structuredAttrs = true;
++          strictDeps = true;
+           nativeBuildInputs = [ pkgs.pkgconf ];
+           buildInputs = [ dep ];
++          outputChecks.out.disallowedRequisites = [ pkgs.pkgconf ];
+         }
+         ''
+           mkdir -p "$out/lib/pkgconfig"
+-          for pc in $(pkgconf --list-package-names); do
+-            ln -s "$(pkgconf --path "$pc")" "$out/lib/pkgconfig/"
++          for pc in $(pkgconf --env-only --list-package-names); do
++            PC_PATH="$(pkgconf --path "$pc")"
++            [ -z "$PC_PATH" ] || ln -s "$PC_PATH" "$out/lib/pkgconfig/"
+           done
+         ''
+     ) old.buildInputs;
+diff --git a/tools/nix/list-requisites.sh b/tools/nix/list-requisites.sh
+index a66a89eb7de..ee6b8da6f02 100755
+--- a/tools/nix/list-requisites.sh
++++ b/tools/nix/list-requisites.sh
+@@ -4,7 +4,7 @@ set -ex
+ 
+ BASE_DIR=$(cd "$(dirname "$0")/../.." && pwd)
+ 
+-OPTIONAL_FLAGS=$(nix-instantiate -I "nixpkgs=$BASE_DIR/tools/nix/pkgs.nix" --eval --strict --raw -E "
++OPTIONAL_FLAGS=$(nix-instantiate -I "$BASE_DIR" -I "nixpkgs=$BASE_DIR/tools/nix/pkgs.nix" --eval --strict --raw -E "
+   (import <nixpkgs> {}).lib.concatMapStrings
+     (n: ''--arg \${n} true '')
+     (builtins.filter
+@@ -16,7 +16,7 @@ OPTIONAL_FLAGS=$(nix-instantiate -I "nixpkgs=$BASE_DIR/tools/nix/pkgs.nix" --eva
+ DRV=$(
+   cd "$BASE_DIR"
+   # shellcheck disable=SC2086
+-  nix-instantiate -I "nixpkgs=./tools/nix/pkgs.nix" shell.nix \
++  nix-instantiate -I. -I "nixpkgs=./tools/nix/pkgs.nix" shell.nix \
+     $OPTIONAL_FLAGS \
+     --arg sharedLibDeps '{
+       # Using an empty set as some build dependencies are required only in the absence of shared deps (e.g. Cargo).
+diff --git a/tools/nix/pkgs-26.05.nix b/tools/nix/pkgs-26.05.nix
+index d90a1d8ba93..9a410b7fce9 100644
+--- a/tools/nix/pkgs-26.05.nix
++++ b/tools/nix/pkgs-26.05.nix
+@@ -1,10 +1,10 @@
+ arg:
+ let
+   repo = "https://github.com/NixOS/nixpkgs";
+-  rev = "c0ae35c6460f00dcac6a59063e080f826e620b28";
++  rev = "57f1c8965649ce5bcac5118a0d2e41f1fbdc56e5";
+   nixpkgs = import (builtins.fetchTarball {
+     url = "${repo}/archive/${rev}.tar.gz";
+-    sha256 = "0hbdqzpiv8p44li7jng01mlg2zbb1ff18z3r250f4rjbqflbiwxs";
++    sha256 = "08gxbi52psc9wvflpfsli9fjvcv1jvzd70w6c8pxl4swjvfcsq3d";
+   }) arg;
+ in
+ # Unstable channel no longer supports Intel architecture for macOS. We can use the 26.05 channel
+diff --git a/tools/nix/pkgs.nix b/tools/nix/pkgs.nix
+index 43cbb29ddd3..6ed279484a5 100644
+--- a/tools/nix/pkgs.nix
++++ b/tools/nix/pkgs.nix
+@@ -1,10 +1,10 @@
+ arg:
+ let
+   repo = "https://github.com/NixOS/nixpkgs";
+-  rev = "0bb2eedc20e4739f29e8045034f2828ad7054f8f";
++  rev = "085af13c1607f4f73ab1e7a51071faf6577a7e87";
+   nixpkgs = import (builtins.fetchTarball {
+     url = "${repo}/archive/${rev}.tar.gz";
+-    sha256 = "008j4dj5yrzww91qvp1lp2c9d1lkwc6i2dpainf5nkdkr3rwj8vy";
++    sha256 = "0wwdfxvwc19qymmjshf8qzw39dqyav1kgxna2ady9l7akqzanm1i";
+   }) arg;
+ in
+ # Unstable channel no longer supports Intel architecture for macOS. We can use the 26.05 channel
+@@ -38,23 +38,4 @@ else
+           Cflags: -I${lib.getInclude boringssl}/include
+         '';
+       };
+-
+-    # TODO: remove pin once https://github.com/mozilla/sccache/issues/2869 is resolved
+-    sccache = nixpkgs.callPackage (builtins.fetchurl {
+-      url = "${repo}/raw/aff8a0b28396750446e5537a96461bc4facdb287/pkgs/by-name/sc/sccache/package.nix";
+-      sha256 = "09dlc99sam9ld9jvzgcc00r4v4ls1cmbb0yim3mr895fpbs8b3qa";
+-    }) { };
+-
+-    # TODO: remove this override once the pin we use has picked up https://github.com/NixOS/nixpkgs/pull/575002
+-    uvwasi = nixpkgs.uvwasi.overrideAttrs (old: {
+-      patches = old.patches ++ [
+-        (nixpkgs.fetchpatch2 {
+-          url = "https://github.com/nodejs/uvwasi/commit/fe602a6911207efd8dcfc070a752bcf76813c978.patch?full_index=1";
+-          hash = "sha256-MyFvRuEhcqZR+Bz2pY9vani8U1iyQrDeni2kKKnJGEI=";
+-        })
+-      ];
+-
+-      buildInputs = [ ];
+-      propagatedBuildInputs = old.buildInputs;
+-    });
+   }

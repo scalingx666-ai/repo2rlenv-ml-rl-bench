@@ -1,0 +1,64 @@
+version = "1.0"
+
+[task]
+name = "default/microsoft__LightGBM-7505"
+description = "[ci] fix 'docker' workflows on 'main' and PRs from forks"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "LightGBM",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "microsoft/LightGBM"
+ref = "d7d70d7b82facb129f422db98ac8c42c5fc4f94e"
+reference = "https://github.com/lightgbm-org/LightGBM/pull/7505"
+source_access = "auto"
+built_at = "2026-11-12T05:36:08.764562+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:aea7745d0144b476ff6cb7c16c1263cff6d642795fcd0d331b7bad828d67b8f2"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-10-28T01:38:47Z"
+diff_format = "unified"
+context_files = [
+    ".github/workflows/docker.yml",
+    ".github/workflows/main.yml",
+    ".github/workflows/pr.yml",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 71
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

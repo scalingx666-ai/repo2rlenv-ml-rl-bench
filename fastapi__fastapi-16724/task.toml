@@ -1,0 +1,62 @@
+version = "1.0"
+
+[task]
+name = "default/fastapi__fastapi-16724"
+description = "🔥 Remove obsolete docs snippet commands"
+
+[metadata]
+difficulty = "large"
+category = "bugfix"
+keywords = [
+    "fastapi",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "fastapi/fastapi"
+ref = "534961812bef29ad80d2f7c399e52c688e8a0d57"
+reference = "https://github.com/fastapi/fastapi/pull/16724"
+source_access = "auto"
+built_at = "2026-11-12T05:41:31.689811+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:72a637fa9421fef1a12b509f0e1a774a28f226ed01e085d0d38df2e5f061a5fa"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-09T20:01:11Z"
+diff_format = "unified"
+context_files = [
+    "scripts/docs.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 128
+difficulty = "large"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

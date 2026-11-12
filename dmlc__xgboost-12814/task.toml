@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/dmlc__xgboost-12814"
+description = "[python] Dedupe training callbacks by identity so an unhashable callback works"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "xgboost",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "dmlc/xgboost"
+ref = "ee6432316f56b4fb96a9787ef7c6463953830126"
+reference = "https://github.com/dmlc/xgboost/pull/12814"
+source_access = "auto"
+built_at = "2026-11-12T05:37:17.193828+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:6cda73a0d0ce71594d7bf869ea3252041f1db6775a03fe18a77b07a42fc91f33"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-09T10:49:11Z"
+diff_format = "unified"
+context_files = [
+    "python-package/xgboost/callback.py",
+    "tests/python/test_callback.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 26
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

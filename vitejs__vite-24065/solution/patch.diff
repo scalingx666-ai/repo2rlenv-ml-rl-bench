@@ -1,0 +1,128 @@
+diff --git a/packages/vite/rolldown.dts.config.ts b/packages/vite/rolldown.dts.config.ts
+index a94ce42cf23c4b..4bc7f35636b47c 100644
+--- a/packages/vite/rolldown.dts.config.ts
++++ b/packages/vite/rolldown.dts.config.ts
+@@ -83,7 +83,6 @@ const identifierReplacements: Record<string, Record<string, string>> = {
+   'rolldown/utils': {
+     TransformOptions$1: 'rolldown_utils_TransformOptions',
+     TransformResult$2: 'rolldown_utils_TransformResult',
+-    ESTree$1: 'rolldown_utils_ESTree',
+   },
+   'node:http': {
+     Server$1: 'http.Server',
+diff --git a/packages/vite/src/node/__tests__/build.spec.ts b/packages/vite/src/node/__tests__/build.spec.ts
+index 95176839ee6b83..116fa389779f14 100644
+--- a/packages/vite/src/node/__tests__/build.spec.ts
++++ b/packages/vite/src/node/__tests__/build.spec.ts
+@@ -94,52 +94,6 @@ describe('build', () => {
+     assertOutputHashContentChange(result[0], result[1])
+   })
+ 
+-  test('transform hook meta keeps rolldown magicString and ast', async () => {
+-    const metaTypes: Array<
+-      [string | undefined, string | undefined, boolean | undefined]
+-    > = []
+-    const result = (await build({
+-      root: resolve(dirname, 'packages/build-project'),
+-      logLevel: 'silent',
+-      build: {
+-        write: false,
+-        minify: false,
+-      },
+-      plugins: [
+-        {
+-          name: 'test',
+-          resolveId(id) {
+-            if (id === 'entry.js') {
+-              return '\0' + id
+-            }
+-          },
+-          load(id) {
+-            if (id === '\0entry.js') {
+-              return `console.log('foo')`
+-            }
+-          },
+-          transform(_code, id, options) {
+-            if (id === '\0entry.js') {
+-              metaTypes.push([
+-                typeof options?.magicString,
+-                typeof options?.ast,
+-                options?.ssr,
+-              ])
+-              const magicString = options!.magicString!
+-              magicString.replaceAll(`'foo'`, `'bar'`)
+-              return { code: magicString }
+-            }
+-          },
+-        },
+-      ],
+-    })) as RolldownOutput
+-    expect(metaTypes).toStrictEqual([['object', 'object', false]])
+-    const [chunk] = result.output.filter(
+-      (chunk): chunk is OutputChunk => chunk.type === 'chunk',
+-    )
+-    expect(chunk?.code).toContain(`console.log("bar")`)
+-  })
+-
+   test('file hash should change when renderBuiltUrl changes', async () => {
+     const createRenderBuiltUrl = (base: string) => (filename: string) =>
+       `${base}/${filename}`
+diff --git a/packages/vite/src/node/build.ts b/packages/vite/src/node/build.ts
+index 83f67552006577..80e25ad4afaf31 100644
+--- a/packages/vite/src/node/build.ts
++++ b/packages/vite/src/node/build.ts
+@@ -1545,16 +1545,9 @@ function injectSsrFlag<T extends Record<string, any>>(
+   pluginName: string,
+ ): T & { ssr?: boolean } {
+   let ssr = environment.config.consumer === 'server'
+-  // spreading the options would drop non-enumerable properties (e.g. the lazy
+-  // `magicString` and `ast` getters rolldown attaches to the transform meta),
+-  // so copy the property descriptors instead
+-  const newOptions = Object.defineProperties(
+-    {},
+-    {
+-      ...(options ? Object.getOwnPropertyDescriptors(options) : {}),
+-      ssr: { value: ssr, writable: true, enumerable: true, configurable: true },
+-    },
+-  ) as T & { ssr?: boolean }
++  const newOptions = { ...options, ssr } as T & {
++    ssr?: boolean
++  }
+ 
+   if (
+     isFutureDeprecationEnabled(
+diff --git a/packages/vite/src/node/plugin.ts b/packages/vite/src/node/plugin.ts
+index 3552fa9d0f93bb..71ed105e361744 100644
+--- a/packages/vite/src/node/plugin.ts
++++ b/packages/vite/src/node/plugin.ts
+@@ -10,11 +10,9 @@ import type {
+   PluginContextMeta,
+   ResolveIdResult,
+   Plugin as RolldownPlugin,
+-  RolldownMagicString,
+   TransformPluginContext,
+   TransformResult,
+ } from 'rolldown'
+-import type { ESTree } from 'rolldown/utils'
+ import type { PartialEnvironment } from './baseEnvironment'
+ import type { BuildAppHook } from './build'
+ import type {
+@@ -165,18 +163,6 @@ export interface Plugin<A = any> extends RolldownPlugin<A> {
+       options?: {
+         moduleType: ModuleType
+         ssr?: boolean | undefined
+-        /**
+-         * A lazily-created MagicString instance for the module's code.
+-         * Only available during build.
+-         * @experimental
+-         */
+-        magicString?: RolldownMagicString | undefined
+-        /**
+-         * The lazily-parsed AST of the module's code.
+-         * Only available during build.
+-         * @experimental
+-         */
+-        ast?: ESTree.Program | undefined
+       },
+     ) => Promise<TransformResult> | TransformResult,
+     {

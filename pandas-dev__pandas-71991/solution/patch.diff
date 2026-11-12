@@ -1,0 +1,72 @@
+diff --git a/doc/source/whatsnew/v3.2.0.rst b/doc/source/whatsnew/v3.2.0.rst
+index f69858924325a..79da5072bdc1e 100644
+--- a/doc/source/whatsnew/v3.2.0.rst
++++ b/doc/source/whatsnew/v3.2.0.rst
+@@ -220,6 +220,7 @@ Conversion
+ - Bug in :class:`DataFrame` constructor and :meth:`DataFrame.from_records` where a list of :class:`Series` with extension dtypes lost those dtypes (:issue:`56231`)
+ - Bug in :func:`to_numeric` raising ``TypeError`` for object values containing 0-dimensional :class:`numpy.ndarray` elements instead of converting them (:issue:`47408`)
+ - Bug in :func:`to_numeric` where a long value with a leading ``+`` was not correctly rounded (:issue:`44145`)
++- Bug in :func:`to_numeric` with ``errors="coerce"`` on :class:`ArrowDtype` string data storing a float ``NaN`` for unparsable values instead of a missing value, and duplicating a parsed value into the position of a failed parse when the input already contained missing values (:issue:`67949`)
+ - Bug in :func:`to_numeric` with a datetime-like scalar not matching the result for a :class:`Series` holding the value (:issue:`43280`)
+ - Bug in :meth:`DataFrame.compare` and :meth:`Series.compare` upcasting integer and boolean columns when the equal values were only in rows dropped from the result (:issue:`39899`)
+ - Bug in :meth:`DataFrame.from_records` not dropping the ``exclude`` and ``index`` columns when all of their labels were falsy, such as ``0`` (:issue:`18679`)
+diff --git a/pandas/core/tools/numeric.py b/pandas/core/tools/numeric.py
+index 96ac6df8c4617..31a62da2a7f21 100644
+--- a/pandas/core/tools/numeric.py
++++ b/pandas/core/tools/numeric.py
+@@ -277,6 +277,7 @@ def to_numeric(
+             set(),
+             coerce_numeric=coerce_numeric,
+             convert_to_masked_nullable=dtype_backend is not lib.no_default
++            or isinstance(values_dtype, ArrowDtype)
+             or (
+                 isinstance(values_dtype, StringDtype)
+                 and values_dtype.na_value is libmissing.NA
+@@ -328,6 +329,12 @@ def to_numeric(
+         if mask is None or (new_mask is not None and new_mask.shape == mask.shape):
+             # GH 52588
+             mask = new_mask
++        elif new_mask is not None:
++            # GH#67949: mask covers the original input while new_mask covers
++            #  only the values left after dropping the original nulls, so
++            #  merge the parse failures back into their original positions
++            mask = mask.copy()
++            mask[~mask] = new_mask
+         else:
+             mask = mask.copy()
+         assert isinstance(mask, np.ndarray)
+diff --git a/pandas/tests/tools/test_to_numeric.py b/pandas/tests/tools/test_to_numeric.py
+index 5707ffabb9217..fad3a0b2ecc94 100644
+--- a/pandas/tests/tools/test_to_numeric.py
++++ b/pandas/tests/tools/test_to_numeric.py
+@@ -1006,12 +1006,25 @@ def test_invalid_dtype_backend():
+         pd.to_numeric(ser, dtype_backend="numpy")
+ 
+ 
+-def test_coerce_pyarrow_backend():
+-    # GH 52588
++@pytest.mark.parametrize(
++    "data, expected, kwargs, dtype",
++    [
++        (list("12x"), [1, 2, None], {"dtype_backend": "pyarrow"}, "int64"),
++        (["1", "x"], [1, None], {}, "int64"),
++        (["1", "NaN"], [1, None], {}, "int64"),
++        (["1", None, "x"], [1, None, None], {}, "int64"),
++        (["1", None, "x"], [1, None, None], {"dtype_backend": "pyarrow"}, "int64"),
++        (["1.5", None, "x"], [1.5, None, None], {}, "float64"),
++    ],
++)
++def test_coerce_pyarrow_string(data, expected, kwargs, dtype):
++    # GH#52588, GH#67949: unparsable strings (including the "NaN" literal)
++    #  must become a real pd.NA that isna() sees, and a parse failure after
++    #  an existing missing value must not duplicate the last parsed value
+     pa = pytest.importorskip("pyarrow")
+-    ser = pd.Series(list("12x"), dtype=pd.ArrowDtype(pa.string()))
+-    result = pd.to_numeric(ser, errors="coerce", dtype_backend="pyarrow")
+-    expected = pd.Series([1, 2, None], dtype=pd.ArrowDtype(pa.int64()))
++    ser = pd.Series(data, dtype=pd.ArrowDtype(pa.string()))
++    result = pd.to_numeric(ser, errors="coerce", **kwargs)
++    expected = pd.Series(expected, dtype=pd.ArrowDtype(getattr(pa, dtype)()))
+     tm.assert_series_equal(result, expected)
+ 
+ 

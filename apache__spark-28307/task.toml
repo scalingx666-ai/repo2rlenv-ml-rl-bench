@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/apache__spark-28307"
+description = "[SPARK-18886][CORE][FOLLOWUP] fix legacyResetOnTaskLaunch version and method docs"
+
+[metadata]
+difficulty = "easy"
+category = "bugfix"
+keywords = [
+    "spark",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "apache/spark"
+ref = "f543d6a1ee76de8cae417ff480fa9c0e0ce5343d"
+reference = "https://github.com/apache/spark/pull/28307"
+source_access = "auto"
+built_at = "2026-11-12T05:49:36.088668+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:90a880b6594a986520976e456cc552df565f9cc890c1d62e68464829a5468001"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2020-04-23T19:38:15Z"
+diff_format = "unified"
+context_files = [
+    "core/src/main/scala/org/apache/spark/internal/config/package.scala",
+    "core/src/main/scala/org/apache/spark/scheduler/TaskSchedulerImpl.scala",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 4
+difficulty = "trivial"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

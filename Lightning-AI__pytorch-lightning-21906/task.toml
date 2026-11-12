@@ -1,0 +1,65 @@
+version = "1.0"
+
+[task]
+name = "default/Lightning-AI__pytorch-lightning-21906"
+description = "fix: `LightningCLI` emitting `jsonargparse` deprecation warnings"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "pytorch-lightning",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "Lightning-AI/pytorch-lightning"
+ref = "a8a60bbde02fc610e5d9894350f523929295eb2e"
+reference = "https://github.com/Lightning-AI/pytorch-lightning/pull/21906"
+source_access = "auto"
+built_at = "2026-11-12T05:40:35.030510+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:f939d928cd79765334289edecc4e632022f6004a7157e68eec98bbc97bc29a11"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-09-01T08:55:21Z"
+diff_format = "unified"
+context_files = [
+    "requirements/pytorch/extra.txt",
+    "src/lightning/pytorch/CHANGELOG.md",
+    "src/lightning/pytorch/cli.py",
+    "tests/tests_pytorch/test_cli.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 59
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

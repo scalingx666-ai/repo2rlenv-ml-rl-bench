@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/vuejs__core-16228"
+description = "fix(runtime-vapor): do not activate an active kept-alive interop child again when it moves"
+
+[metadata]
+difficulty = "large"
+category = "bugfix"
+keywords = [
+    "core",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "vuejs/core"
+ref = "051b5ad9dd18d42a31d246525a6d69ccbf60a45d"
+reference = "https://github.com/vuejs/core/pull/16228"
+source_access = "auto"
+built_at = "2026-11-12T05:49:15.081931+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:4aea8367f5e132f3cce68672cba5fb2da37be48591cad9f8e27ca0756d823a00"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-11T06:03:35Z"
+diff_format = "unified"
+context_files = [
+    "packages/runtime-vapor/__tests__/vdomInterop.spec.ts",
+    "packages/runtime-vapor/src/vdomInterop.ts",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 158
+difficulty = "large"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

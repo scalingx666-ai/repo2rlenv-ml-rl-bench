@@ -1,0 +1,71 @@
+diff --git a/keras/src/ops/numpy.py b/keras/src/ops/numpy.py
+index c3eea31c118c..945687cb9f29 100644
+--- a/keras/src/ops/numpy.py
++++ b/keras/src/ops/numpy.py
+@@ -204,7 +204,7 @@ def abs(x):
+ 
+ class Fabs(Operation):
+     def call(self, x):
+-        return backend.ops.numpy.fabs(x)
++        return _fabs(x)
+ 
+     def compute_output_spec(self, x):
+         sparse = getattr(x, "sparse", False)
+@@ -240,14 +240,23 @@ def fabs(x):
+     """
+     if any_symbolic_tensors((x,)):
+         return Fabs().symbolic_call(x)
++    return _fabs(x)
++
+ 
++def _fabs(x):
+     x = backend.ops.convert_to_tensor(x)
+-    if "complex" in standardize_dtype(x.dtype):
++    dtype = standardize_dtype(x.dtype)
++    if "complex" in dtype:
+         raise TypeError(
+             f"fabs does not support complex inputs. Received: x.dtype={x.dtype}"
+         )
+-
+-    return backend.ops.numpy.fabs(x)
++    if not config._use_backend_agnostic_ops() and hasattr(
++        backend.ops.numpy, "fabs"
++    ):
++        return backend.ops.numpy.fabs(x)
++    if "int" in dtype or dtype == "bool":
++        x = backend.ops.cast(x, config.floatx())
++    return backend.ops.numpy.absolute(x)
+ 
+ 
+ class Add(Operation):
+diff --git a/keras/src/ops/numpy_test.py b/keras/src/ops/numpy_test.py
+index 4a913e58f225..b4e1fc4f3129 100644
+--- a/keras/src/ops/numpy_test.py
++++ b/keras/src/ops/numpy_test.py
+@@ -5730,7 +5730,10 @@ def test_abs(self):
+ 
+         self.assertAllClose(knp.Abs()(x), np.abs(x))
+ 
+-    def test_fabs(self):
++    @parameterized.named_parameters(named_product(BACKEND_AGNOSTIC_OPS))
++    def test_fabs(self, backend_agnostic_ops):
++        backend.config._set_use_backend_agnostic_ops(backend_agnostic_ops)
++        self.addCleanup(backend.config._set_use_backend_agnostic_ops, False)
+         x = np.array([[-1, 2, -3], [3, -2, 1]])
+         self.assertAllClose(knp.fabs(x), np.fabs(x))
+ 
+@@ -9841,8 +9844,12 @@ def test_zeros(self, dtype):
+             expected_dtype,
+         )
+ 
+-    @parameterized.named_parameters(named_product(dtype=ALL_DTYPES))
+-    def test_fabs(self, dtype):
++    @parameterized.named_parameters(
++        named_product(BACKEND_AGNOSTIC_OPS, dtype=ALL_DTYPES)
++    )
++    def test_fabs(self, backend_agnostic_ops, dtype):
++        backend.config._set_use_backend_agnostic_ops(backend_agnostic_ops)
++        self.addCleanup(backend.config._set_use_backend_agnostic_ops, False)
+         if "complex" in standardize_dtype(dtype):
+             self.skipTest("fabs does not support complex types")
+ 

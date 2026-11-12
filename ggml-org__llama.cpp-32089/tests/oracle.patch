@@ -1,0 +1,112 @@
+diff --git a/src/llama-context.cpp b/src/llama-context.cpp
+index 89961847bac..12db2068e33 100644
+--- a/src/llama-context.cpp
++++ b/src/llama-context.cpp
+@@ -449,6 +449,15 @@ llama_context::llama_context(
+                 __func__, cparams.n_ctx_seq, hparams.n_ctx_train);
+     }
+ 
++    {
++        const int64_t max_nodes = graph_max_nodes();
++
++        gf_res_reserve = std::make_unique<llm_graph_result>(max_nodes);
++        for (auto & res : gf_res_prev) {
++            res = std::make_unique<llm_graph_result>(max_nodes);
++        }
++    }
++
+     if (!hparams.vocab_only) {
+         // GPU backends
+         for (const auto & dev : model.devices) {
+@@ -797,11 +806,14 @@ void llama_context::sched_reserve() {
+ 
+     LLAMA_LOG_DEBUG("%s: max_nodes = %zu\n", __func__, max_nodes);
+ 
++    gf_res_prev_active = nullptr;
++
++    gf_res_reserve->set_max_nodes(max_nodes);
++    gf_res_reserve->reset();
+     for (auto & res : gf_res_prev) {
+-        res.reset();
++        res->set_max_nodes(max_nodes);
++        res->reset();
+     }
+-    gf_res_reserve.reset(new llm_graph_result(max_nodes));
+-    gf_res_prev_active = nullptr;
+ 
+     sched_new({
+         /*.max_nodes  =*/ max_nodes,
+@@ -1047,9 +1059,7 @@ bool llama_context::memory_update(bool optimize) {
+         // reset the previous graph results to make sure that they won't be reused
+         // TODO: make mctx->apply() report if a graph reserve is needed, then reset graph results only if the memory module reset the scheduler
+         for (auto & res : gf_res_prev) {
+-            if (res) {
+-                res->reset();
+-            }
++            res->reset();
+         }
+         gf_res_prev_active = nullptr;
+ 
+@@ -2947,11 +2957,7 @@ llm_graph_result * llama_context::get_gf_res_reserve() const {
+ }
+ 
+ llm_graph_result * llama_context::get_gf_res_prev() {
+-    auto & res = gf_res_prev[n_outputs > 0];
+-    if (!res) {
+-        res.reset(new llm_graph_result(gf_res_reserve->get_max_nodes()));
+-    }
+-    return res.get();
++    return gf_res_prev[n_outputs > 0].get();
+ }
+ 
+ // pack sampler outputs into as few sequences as possible before using sequences without samplers
+@@ -3025,9 +3031,7 @@ ggml_cgraph * llama_context::graph_reserve(
+ 
+     // when the scheduler is reset, we cannot reuse old graphs, so we reset the previous graph results
+     for (auto & res : gf_res_prev) {
+-        if (res) {
+-            res->reset();
+-        }
++        res->reset();
+     }
+     gf_res_prev_active = nullptr;
+ 
+diff --git a/src/llama-graph.cpp b/src/llama-graph.cpp
+index 847a3e1ec9f..1174909bca1 100644
+--- a/src/llama-graph.cpp
++++ b/src/llama-graph.cpp
+@@ -1413,6 +1413,10 @@ int64_t llm_graph_result::get_max_nodes() const {
+     return max_nodes;
+ }
+ 
++void llm_graph_result::set_max_nodes(int64_t max_nodes) {
++    this->max_nodes = max_nodes;
++}
++
+ void llm_graph_result::reset() {
+     t_inp_tokens  = nullptr;
+     t_inp_embd    = nullptr;
+diff --git a/src/llama-graph.h b/src/llama-graph.h
+index 8242ebb895d..89370a97ee4 100644
+--- a/src/llama-graph.h
++++ b/src/llama-graph.h
+@@ -943,6 +943,8 @@ class llm_graph_result {
+ 
+     int64_t get_max_nodes() const;
+ 
++    void set_max_nodes(int64_t max_nodes);
++
+     void reset();
+ 
+     void set_inputs(const llama_ubatch * ubatch);
+@@ -996,9 +998,9 @@ class llm_graph_result {
+ 
+     ggml_cgraph * gf;
+ 
++private:
+     int64_t max_nodes;
+ 
+-private:
+     // keep a copy of the previous graph parameters
+     // we will use this to determine whether the graph can be reused by comparing them with the new parameters
+     // note: these are updated after constructing the new graph

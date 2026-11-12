@@ -1,0 +1,65 @@
+version = "1.0"
+
+[task]
+name = "default/microsoft__vscode-347764"
+description = "agentHost: discover SSH hosts through quoted Include paths"
+
+[metadata]
+difficulty = "large"
+category = "bugfix"
+keywords = [
+    "vscode",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "microsoft/vscode"
+ref = "277e7a565da12a6c3253f21925ad4a5825bfd6a0"
+reference = "https://github.com/microsoft/vscode/pull/347764"
+source_access = "auto"
+built_at = "2026-11-12T05:46:03.739898+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:2c9035c36f0f1b6e56579b60d60608863c873d3c8c05db6f6c9a52eb4e870859"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-12T01:42:34Z"
+diff_format = "unified"
+context_files = [
+    "src/vs/platform/agentHost/common/sshConfigParsing.ts",
+    "src/vs/platform/agentHost/node/sshRemoteAgentHostService.ts",
+    "src/vs/platform/agentHost/test/common/sshConfigParsing.test.ts",
+    "src/vs/platform/agentHost/test/node/sshRemoteAgentHostService.test.ts",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 161
+difficulty = "large"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

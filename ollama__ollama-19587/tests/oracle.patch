@@ -1,0 +1,204 @@
+diff --git a/cmd/launch/claude.go b/cmd/launch/claude.go
+index ba6cbd05e78..b45f9db3a72 100644
+--- a/cmd/launch/claude.go
++++ b/cmd/launch/claude.go
+@@ -69,6 +69,16 @@ func (c *Claude) envVars(model string, models []LaunchModel) []string {
+ 		"ANTHROPIC_BASE_URL=" + envconfig.Host().String(),
+ 		"ANTHROPIC_API_KEY=",
+ 		"ANTHROPIC_AUTH_TOKEN=ollama",
++		// Keep provider routing scoped to this launch, including when Claude
++		// settings contain a different endpoint or credentials.
++		"CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST=1",
++		"CLAUDE_CODE_USE_BEDROCK=",
++		"CLAUDE_CODE_USE_VERTEX=",
++		"CLAUDE_CODE_USE_FOUNDRY=",
++		"CLAUDE_CODE_USE_ANTHROPIC_AWS=",
++		"CLAUDE_CODE_USE_ANTHROPIC_GOOGLE_CLOUD=",
++		"CLAUDE_CODE_USE_MANTLE=",
++		"CLAUDE_CODE_USE_GATEWAY=",
+ 		"ENABLE_CLAUDEAI_MCP_SERVERS=false",
+ 		"CLAUDE_CODE_ATTRIBUTION_HEADER=0",
+ 		"CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off",
+diff --git a/cmd/launch/claude_test.go b/cmd/launch/claude_test.go
+index 5c607319254..378152210a3 100644
+--- a/cmd/launch/claude_test.go
++++ b/cmd/launch/claude_test.go
+@@ -376,7 +376,7 @@ func TestClaudeEnvVars(t *testing.T) {
+ 	}
+ }
+ 
+-func TestClaudeRunDisablesClaudeAiConnectors(t *testing.T) {
++func TestClaudeRunRoutesThroughOllama(t *testing.T) {
+ 	if runtime.GOOS == "windows" {
+ 		t.Skip("uses a POSIX shell fake binary")
+ 	}
+@@ -387,6 +387,17 @@ func TestClaudeRunDisablesClaudeAiConnectors(t *testing.T) {
+ 			t.Setenv("OLLAMA_HOST", "http://127.0.0.1:12345")
+ 			t.Setenv("ANTHROPIC_API_KEY", "test-api-key")
+ 			t.Setenv("ANTHROPIC_AUTH_TOKEN", "test-auth-token")
++			t.Setenv("CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST", "0")
++			providerKeys := []string{
++				"CLAUDE_CODE_USE_BEDROCK", "CLAUDE_CODE_USE_VERTEX", "CLAUDE_CODE_USE_FOUNDRY",
++				"CLAUDE_CODE_USE_ANTHROPIC_AWS", "CLAUDE_CODE_USE_ANTHROPIC_GOOGLE_CLOUD", "CLAUDE_CODE_USE_MANTLE",
++				"CLAUDE_CODE_USE_GATEWAY",
++			}
++			for _, key := range providerKeys {
++				t.Setenv(key, "1")
++			}
++			t.Setenv("CLAUDE_CODE_EFFORT_LEVEL", "high")
++			t.Setenv("MAX_THINKING_TOKENS", "4096")
+ 
+ 			dir := t.TempDir()
+ 			output := filepath.Join(dir, "env-and-args")
+@@ -394,6 +405,7 @@ func TestClaudeRunDisablesClaudeAiConnectors(t *testing.T) {
+ 			t.Setenv("CLAUDE_LAUNCH_TEST_OUTPUT", output)
+ 			script := `#!/bin/sh
+ printf '%s\n' "$ENABLE_CLAUDEAI_MCP_SERVERS" "$ANTHROPIC_BASE_URL" "${ANTHROPIC_API_KEY-unset}" "$ANTHROPIC_AUTH_TOKEN" "$@" > "$CLAUDE_LAUNCH_TEST_OUTPUT"
++printf '%s\n' "$CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST" "$CLAUDE_CODE_USE_BEDROCK" "$CLAUDE_CODE_USE_VERTEX" "$CLAUDE_CODE_USE_FOUNDRY" "$CLAUDE_CODE_USE_ANTHROPIC_AWS" "$CLAUDE_CODE_USE_ANTHROPIC_GOOGLE_CLOUD" "$CLAUDE_CODE_USE_MANTLE" "$CLAUDE_CODE_USE_GATEWAY" "$CLAUDE_CODE_EFFORT_LEVEL" "$MAX_THINKING_TOKENS" >> "$CLAUDE_LAUNCH_TEST_OUTPUT"
+ `
+ 			if err := os.WriteFile(filepath.Join(dir, "claude"), []byte(script), 0o755); err != nil {
+ 				t.Fatal(err)
+@@ -407,13 +419,24 @@ printf '%s\n' "$ENABLE_CLAUDEAI_MCP_SERVERS" "$ANTHROPIC_BASE_URL" "${ANTHROPIC_
+ 			if err != nil {
+ 				t.Fatal(err)
+ 			}
+-			want := strings.Join([]string{"false", "http://127.0.0.1:12345", "", "ollama", "--model", model, "--mcp-config", mcpConfig, ""}, "\n")
++			want := strings.Join([]string{
++				"false", "http://127.0.0.1:12345", "", "ollama", "--model", model, "--mcp-config", mcpConfig,
++				"1", "", "", "", "", "", "", "", "high", "4096", "",
++			}, "\n")
+ 			if string(got) != want {
+ 				t.Fatalf("child environment and arguments = %q, want %q", got, want)
+ 			}
+ 			if got := os.Getenv("ENABLE_CLAUDEAI_MCP_SERVERS"); got != "true" {
+ 				t.Fatalf("parent ENABLE_CLAUDEAI_MCP_SERVERS = %q, want true", got)
+ 			}
++			for _, key := range providerKeys {
++				if got := os.Getenv(key); got != "1" {
++					t.Errorf("parent %s = %q, want 1", key, got)
++				}
++			}
++			if got := os.Getenv("ANTHROPIC_API_KEY"); got != "test-api-key" {
++				t.Errorf("parent ANTHROPIC_API_KEY = %q, want test-api-key", got)
++			}
+ 		})
+ 	}
+ }
+diff --git a/cmd/launch/integrations_test.go b/cmd/launch/integrations_test.go
+index 833e1d79c27..2030fe00c5f 100644
+--- a/cmd/launch/integrations_test.go
++++ b/cmd/launch/integrations_test.go
+@@ -1064,7 +1064,7 @@ func TestShowOrPullWithPolicy_ModelNotFound_AutoPullPolicyPullsWithoutPrompt(t *
+ 	}
+ }
+ 
+-func TestShowOrPullWithPolicy_CloudModelNotFound_FailsEarlyForAllPolicies(t *testing.T) {
++func TestShowOrPullWithPolicy_CloudModelUnavailable_FailsEarlyForAllPolicies(t *testing.T) {
+ 	oldHook := DefaultConfirmPrompt
+ 	DefaultConfirmPrompt = func(prompt string, options ConfirmOptions) (bool, error) {
+ 		t.Fatal("confirm prompt should not be called for explicit cloud models")
+@@ -1072,41 +1072,51 @@ func TestShowOrPullWithPolicy_CloudModelNotFound_FailsEarlyForAllPolicies(t *tes
+ 	}
+ 	defer func() { DefaultConfirmPrompt = oldHook }()
+ 
+-	for _, policy := range []missingModelPolicy{missingModelPromptPull, missingModelAutoPull, missingModelFail} {
+-		t.Run(fmt.Sprintf("policy=%d", policy), func(t *testing.T) {
+-			var pullCalled bool
+-			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+-				switch r.URL.Path {
+-				case "/api/show":
+-					w.WriteHeader(http.StatusNotFound)
+-					fmt.Fprintf(w, `{"error":"model not found"}`)
+-				case "/api/status":
+-					w.WriteHeader(http.StatusNotFound)
+-					fmt.Fprintf(w, `{"error":"not found"}`)
+-				case "/api/pull":
+-					pullCalled = true
+-					w.WriteHeader(http.StatusOK)
+-					fmt.Fprintf(w, `{"status":"success"}`)
+-				default:
+-					w.WriteHeader(http.StatusNotFound)
+-				}
+-			}))
+-			defer srv.Close()
++	for _, status := range []struct {
++		name string
++		code int
++		body string
++		want string
++	}{
++		{"missing", http.StatusNotFound, `{"error":"model not found"}`, `model "glm-5.1:cloud" not found`},
++		{"retired", http.StatusGone, `{"error":"model was retired; try replacement:cloud"}`, "model was retired; try replacement:cloud"},
++	} {
++		for _, policy := range []missingModelPolicy{missingModelPromptPull, missingModelAutoPull, missingModelFail} {
++			t.Run(fmt.Sprintf("%s/policy=%d", status.name, policy), func(t *testing.T) {
++				var pullCalled bool
++				srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++					switch r.URL.Path {
++					case "/api/show":
++						w.WriteHeader(status.code)
++						fmt.Fprint(w, status.body)
++					case "/api/status":
++						w.WriteHeader(http.StatusNotFound)
++						fmt.Fprintf(w, `{"error":"not found"}`)
++					case "/api/pull":
++						pullCalled = true
++						w.WriteHeader(http.StatusOK)
++						fmt.Fprintf(w, `{"status":"success"}`)
++					default:
++						w.WriteHeader(http.StatusNotFound)
++					}
++				}))
++				defer srv.Close()
+ 
+-			u, _ := url.Parse(srv.URL)
+-			client := api.NewClient(u, srv.Client())
++				u, _ := url.Parse(srv.URL)
++				client := api.NewClient(u, srv.Client())
+ 
+-			err := showOrPullWithPolicy(context.Background(), client, "glm-5.1:cloud", policy, true)
+-			if err == nil {
+-				t.Fatalf("expected cloud model not-found error for policy %d", policy)
+-			}
+-			if !strings.Contains(err.Error(), `model "glm-5.1:cloud" not found`) {
+-				t.Fatalf("expected not-found error for policy %d, got %v", policy, err)
+-			}
+-			if pullCalled {
+-				t.Fatalf("expected pull not to be called for cloud model with policy %d", policy)
+-			}
+-		})
++				err := showOrPullWithPolicy(context.Background(), client, "glm-5.1:cloud", policy, true)
++				if err == nil {
++					t.Fatalf("expected cloud model unavailable error for policy %d", policy)
++				}
++				if !strings.Contains(err.Error(), status.want) {
++					t.Fatalf("expected unavailable error containing %q for policy %d, got %v", status.want, policy, err)
++				}
++				if pullCalled {
++					t.Fatalf("expected pull not to be called for cloud model with policy %d", policy)
++				}
++			})
++		}
+ 	}
+ }
+ 
+diff --git a/cmd/launch/models.go b/cmd/launch/models.go
+index b9f924fc09a..55464a3cdaf 100644
+--- a/cmd/launch/models.go
++++ b/cmd/launch/models.go
+@@ -263,8 +263,13 @@ func showOrPullWithPolicy(ctx context.Context, client *api.Client, model string,
+ 				return errors.New(internalcloud.DisabledError("remote inference is unavailable"))
+ 			}
+ 			var statusErr api.StatusError
+-			if errors.As(err, &statusErr) && statusErr.StatusCode == http.StatusNotFound {
+-				return fmt.Errorf("model %q not found", model)
++			if errors.As(err, &statusErr) {
++				switch statusErr.StatusCode {
++				case http.StatusNotFound:
++					return fmt.Errorf("model %q not found", model)
++				case http.StatusGone:
++					return err
++				}
+ 			}
+ 			return nil
+ 		}

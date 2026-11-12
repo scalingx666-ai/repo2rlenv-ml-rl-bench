@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/microsoft__onnxruntime-34101"
+description = "Read device memory type when adapting API tensors in EP adapter"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "onnxruntime",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "microsoft/onnxruntime"
+ref = "6cc3c09506eca32a1f077eb210b4442e51890847"
+reference = "https://github.com/microsoft/onnxruntime/pull/34101"
+source_access = "auto"
+built_at = "2026-11-12T05:39:25.297205+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:94cae888a220ad2924a913cc9cf928d39189eef95c176803f2f89ca9bacce263"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-11T17:20:48Z"
+diff_format = "unified"
+context_files = [
+    "include/onnxruntime/ep/adapter/tensor_helper.h",
+    "onnxruntime/test/autoep/test_registration.cc",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 21
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

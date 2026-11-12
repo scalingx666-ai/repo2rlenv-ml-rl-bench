@@ -2,16 +2,216 @@
   "dataset": "repo2rlenv-ml-rl-bench",
   "generator": "HuggingFace Repo2RLEnv 0.9.6",
   "pipeline": "pr_diff",
-  "task_count": 54,
+  "task_count": 100,
+  "expansion": {
+    "strategy": "high-star high-value real repositories, max 3 tasks per new repo (prefer 2), star-priority round-robin",
+    "new_repos": 40,
+    "new_tasks": 46,
+    "stars_evidence": "gh api repos/<owner>/<repo> .stargazers_count, fetched 2026-11-12"
+  },
   "source_repos": {
+    "Lightning-AI/pytorch-lightning": 1,
+    "apache/airflow": 1,
+    "apache/spark": 1,
+    "catboost/catboost": 1,
+    "denoland/deno": 1,
+    "django/django": 1,
+    "dmlc/xgboost": 1,
+    "explosion/spaCy": 1,
+    "expressjs/express": 1,
+    "facebook/react": 2,
+    "fastapi/fastapi": 1,
+    "ggml-org/llama.cpp": 2,
     "huggingface/accelerate": 10,
     "huggingface/datasets": 14,
     "huggingface/diffusers": 3,
     "huggingface/peft": 9,
+    "huggingface/tokenizers": 1,
     "huggingface/transformers": 6,
-    "huggingface/trl": 12
+    "huggingface/trl": 12,
+    "jax-ml/jax": 1,
+    "keras-team/keras": 1,
+    "kubernetes/kubernetes": 1,
+    "langchain-ai/langchain": 2,
+    "microsoft/DeepSpeed": 1,
+    "microsoft/LightGBM": 1,
+    "microsoft/onnxruntime": 1,
+    "microsoft/vscode": 2,
+    "mlflow/mlflow": 1,
+    "n8n-io/n8n": 2,
+    "nodejs/node": 1,
+    "numpy/numpy": 1,
+    "ollama/ollama": 2,
+    "openai/whisper": 1,
+    "opencv/opencv": 1,
+    "optuna/optuna": 1,
+    "pallets/flask": 1,
+    "pandas-dev/pandas": 1,
+    "pytorch/pytorch": 1,
+    "ray-project/ray": 1,
+    "redis/redis": 1,
+    "rust-lang/rust": 1,
+    "scikit-learn/scikit-learn": 1,
+    "ultralytics/ultralytics": 1,
+    "vitejs/vite": 1,
+    "vllm-project/vllm": 1,
+    "vuejs/core": 1
   },
   "tasks": [
+    {
+      "name": "default/Lightning-AI__pytorch-lightning-21906",
+      "description": "fix: `LightningCLI` emitting `jsonargparse` deprecation warnings",
+      "repo": "Lightning-AI/pytorch-lightning",
+      "reference": "https://github.com/Lightning-AI/pytorch-lightning/pull/21906",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/apache__airflow-76924",
+      "description": "Copy the stack trace from the Dag import error modals",
+      "repo": "apache/airflow",
+      "reference": "https://github.com/apache/airflow/pull/76924",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/apache__spark-28307",
+      "description": "[SPARK-18886][CORE][FOLLOWUP] fix legacyResetOnTaskLaunch version and method docs",
+      "repo": "apache/spark",
+      "reference": "https://github.com/apache/spark/pull/28307",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/catboost__catboost-2185",
+      "description": "add catboos.Pool creation benchmark",
+      "repo": "catboost/catboost",
+      "reference": "https://github.com/catboost/catboost/pull/2185",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/denoland__deno-37051",
+      "description": "fix(cli): list the lts channel in the deno upgrade usage",
+      "repo": "denoland/deno",
+      "reference": "https://github.com/denoland/deno/pull/37051",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/django__django-22241",
+      "description": "Fixed #37469 -- Made psycopg adapter UTF8Dumper handle None",
+      "repo": "django/django",
+      "reference": "https://github.com/django/django/pull/22241",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/dmlc__xgboost-12814",
+      "description": "[python] Dedupe training callbacks by identity so an unhashable callback works",
+      "repo": "dmlc/xgboost",
+      "reference": "https://github.com/dmlc/xgboost/pull/12814",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/explosion__spaCy-13932",
+      "description": "Fix memory_zone cleanup on exception",
+      "repo": "explosion/spaCy",
+      "reference": "https://github.com/explosion/spaCy/pull/13932",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/expressjs__express-7512",
+      "description": "docs: fix typos and a stale API reference in lib comments",
+      "repo": "expressjs/express",
+      "reference": "https://github.com/expressjs/express/pull/7512",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/facebook__react-38128",
+      "description": "[Flight] Fix hooks in streamed Server Components",
+      "repo": "facebook/react",
+      "reference": "https://github.com/react/react/pull/38128",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/facebook__react-38132",
+      "description": "Fix: Infinite loop caused by uDV + suspended hydration or retry",
+      "repo": "facebook/react",
+      "reference": "https://github.com/react/react/pull/38132",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/fastapi__fastapi-16724",
+      "description": "🔥 Remove obsolete docs snippet commands",
+      "repo": "fastapi/fastapi",
+      "reference": "https://github.com/fastapi/fastapi/pull/16724",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/ggml-org__llama.cpp-32084",
+      "description": "ci : remove dead snakes",
+      "repo": "ggml-org/llama.cpp",
+      "reference": "https://github.com/ggml-org/llama.cpp/pull/32084",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/ggml-org__llama.cpp-32089",
+      "description": "llama : reuse graph result instances across scheduler reserves",
+      "repo": "ggml-org/llama.cpp",
+      "reference": "https://github.com/ggml-org/llama.cpp/pull/32089",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
     {
       "name": "default/huggingface__accelerate-4352",
       "description": "Fix loading checkpoints with modules offloaded to disk",
@@ -409,6 +609,17 @@
       "evaluation_status": "unverified"
     },
     {
+      "name": "default/huggingface__tokenizers-2633",
+      "description": "fix(parallelism): don't build a pool when the lock is contended",
+      "repo": "huggingface/tokenizers",
+      "reference": "https://github.com/huggingface/tokenizers/pull/2633",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
       "name": "default/huggingface__transformers-50532",
       "description": "Speed up `bad_words_ids` and `sequence_bias` by matching multi-token sequences in one pass",
       "repo": "huggingface/transformers",
@@ -600,6 +811,347 @@
       "description": "Raise at AsyncGRPO init when there is no reward source",
       "repo": "huggingface/trl",
       "reference": "https://github.com/huggingface/trl/pull/8249",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/jax-ml__jax-42521",
+      "description": "[jax-buildcop] Eliminate redundant XLA compilations in `hyp1f1`, `hyp2f1`, and `betaln` gradient tests",
+      "repo": "jax-ml/jax",
+      "reference": "https://github.com/jax-ml/jax/pull/42521",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/keras-team__keras-24207",
+      "description": "Add backend-agnostic implementation for fabs",
+      "repo": "keras-team/keras",
+      "reference": "https://github.com/keras-team/keras/pull/24207",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/kubernetes__kubernetes-144031",
+      "description": "kubelet: prioritize resizes for preempting pods over nonpreempting pods",
+      "repo": "kubernetes/kubernetes",
+      "reference": "https://github.com/kubernetes/kubernetes/pull/144031",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/langchain-ai__langchain-41777",
+      "description": "docs(langchain): explain Baseten minimum version",
+      "repo": "langchain-ai/langchain",
+      "reference": "https://github.com/langchain-ai/langchain/pull/41777",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/langchain-ai__langchain-41778",
+      "description": "release(langchain): 1.4.10",
+      "repo": "langchain-ai/langchain",
+      "reference": "https://github.com/langchain-ai/langchain/pull/41778",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/microsoft__DeepSpeed-9032",
+      "description": "Treat an all-deselected selection as success in cpu-torch-latest-v1-multirank",
+      "repo": "microsoft/DeepSpeed",
+      "reference": "https://github.com/deepspeedai/DeepSpeed/pull/9032",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/microsoft__LightGBM-7505",
+      "description": "[ci] fix 'docker' workflows on 'main' and PRs from forks",
+      "repo": "microsoft/LightGBM",
+      "reference": "https://github.com/lightgbm-org/LightGBM/pull/7505",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/microsoft__onnxruntime-34101",
+      "description": "Read device memory type when adapting API tensors in EP adapter",
+      "repo": "microsoft/onnxruntime",
+      "reference": "https://github.com/microsoft/onnxruntime/pull/34101",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/microsoft__vscode-347764",
+      "description": "agentHost: discover SSH hosts through quoted Include paths",
+      "repo": "microsoft/vscode",
+      "reference": "https://github.com/microsoft/vscode/pull/347764",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/microsoft__vscode-347774",
+      "description": "build: run only the tsec rules, without a second full type check",
+      "repo": "microsoft/vscode",
+      "reference": "https://github.com/microsoft/vscode/pull/347774",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/mlflow__mlflow-27698",
+      "description": "Fix `search_issues` trace count failing on SQL Server (error 8120)",
+      "repo": "mlflow/mlflow",
+      "reference": "https://github.com/mlflow/mlflow/pull/27698",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/n8n-io__n8n-43550",
+      "description": "fix: Accept custom OpenAI-compatible model IDs in v2",
+      "repo": "n8n-io/n8n",
+      "reference": "https://github.com/n8n-io/n8n/pull/43550",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/n8n-io__n8n-43551",
+      "description": "ci: Run the affected unit, integration and DB tests in the merge queue (no-changelog)",
+      "repo": "n8n-io/n8n",
+      "reference": "https://github.com/n8n-io/n8n/pull/43551",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/nodejs__node-67334",
+      "description": "tools: update nixpkgs-unstable to 4fe25e12eb9f4c744966dd3de5a05246cf0",
+      "repo": "nodejs/node",
+      "reference": "https://github.com/nodejs/node/pull/67334",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/numpy__numpy-33285",
+      "description": "BUG: ufunc.at: raise on a non-writeable first operand",
+      "repo": "numpy/numpy",
+      "reference": "https://github.com/numpy/numpy/pull/33285",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/ollama__ollama-19580",
+      "description": "windows: add CUDA 13.5 and SM 103 for ARM64",
+      "repo": "ollama/ollama",
+      "reference": "https://github.com/ollama/ollama/pull/19580",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/ollama__ollama-19587",
+      "description": "launch: fix Claude Code routing and retired model errors",
+      "repo": "ollama/ollama",
+      "reference": "https://github.com/ollama/ollama/pull/19587",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/openai__whisper-2588",
+      "description": "Fixed triton kernel update to support latest triton versions",
+      "repo": "openai/whisper",
+      "reference": "https://github.com/openai/whisper/pull/2588",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/opencv__opencv-30739",
+      "description": "imgproc: fix stackBlur on sub-matrices and in place",
+      "repo": "opencv/opencv",
+      "reference": "https://github.com/opencv/opencv/pull/30739",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/optuna__optuna-6938",
+      "description": "Speed up `plot_pareto_front` by replacing `O(N * |P|)` list lookup in `_get_non_pareto_front_trials`",
+      "repo": "optuna/optuna",
+      "reference": "https://github.com/optuna/optuna/pull/6938",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/pallets__flask-5945",
+      "description": "add zizmor to scan workflows",
+      "repo": "pallets/flask",
+      "reference": "https://github.com/pallets/flask/pull/5945",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/pandas-dev__pandas-71991",
+      "description": "BUG: to_numeric(errors='coerce') on ArrowDtype strings stored NaN ins…",
+      "repo": "pandas-dev/pandas",
+      "reference": "https://github.com/pandas-dev/pandas/pull/71991",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/pytorch__pytorch-201790",
+      "description": "[release/2.15] [c10d][nccl2] Do not treat zero-sized output tensors as aliased in all_gather",
+      "repo": "pytorch/pytorch",
+      "reference": "https://github.com/pytorch/pytorch/pull/201790",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/ray-project__ray-68035",
+      "description": "[2.59.2][deps] Bump brotli to 1.2.1 in the large_image_embedding release lock",
+      "repo": "ray-project/ray",
+      "reference": "https://github.com/ray-project/ray/pull/68035",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/redis__redis-16190",
+      "description": "Fix undefined shifts in lua_cmsgpack int decoding",
+      "repo": "redis/redis",
+      "reference": "https://github.com/redis/redis/pull/16190",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/rust-lang__rust-165805",
+      "description": "Replace `match_span_kind` macro with `SpanKind`",
+      "repo": "rust-lang/rust",
+      "reference": "https://github.com/rust-lang/rust/pull/165805",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/scikit-learn__scikit-learn-35357",
+      "description": ":lock: :robot: CI Update lock files for scipy-dev CI build(s) :lock: :robot:",
+      "repo": "scikit-learn/scikit-learn",
+      "reference": "https://github.com/scikit-learn/scikit-learn/pull/35357",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/ultralytics__ultralytics-27156",
+      "description": "Let CPU CI runners save and restore zstd-compressed Actions caches",
+      "repo": "ultralytics/ultralytics",
+      "reference": "https://github.com/ultralytics/ultralytics/pull/27156",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/vitejs__vite-24065",
+      "description": "chore: revert \"fix(build): keep `magicString` and `ast` in transform hook meta (#24012)\"",
+      "repo": "vitejs/vite",
+      "reference": "https://github.com/vitejs/vite/pull/24065",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/vllm-project__vllm-66986",
+      "description": "[Bugfix][Muse Spark] Avoid the FlashInfer Cake PDL race in gated_residual_rmsnorm",
+      "repo": "vllm-project/vllm",
+      "reference": "https://github.com/vllm-project/vllm/pull/66986",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/vuejs__core-16228",
+      "description": "fix(runtime-vapor): do not activate an active kept-alive interop child again when it moves",
+      "repo": "vuejs/core",
+      "reference": "https://github.com/vuejs/core/pull/16228",
       "pipeline": "pr_diff",
       "reward_kinds": [
         "diff_similarity"

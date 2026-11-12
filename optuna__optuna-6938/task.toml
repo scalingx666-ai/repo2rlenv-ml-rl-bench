@@ -1,0 +1,62 @@
+version = "1.0"
+
+[task]
+name = "default/optuna__optuna-6938"
+description = "Speed up `plot_pareto_front` by replacing `O(N * |P|)` list lookup in `_get_non_pareto_front_trials`"
+
+[metadata]
+difficulty = "small"
+category = "bugfix"
+keywords = [
+    "optuna",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "optuna/optuna"
+ref = "c353e29912ea64c257e7914e590c4b4cc4e298e6"
+reference = "https://github.com/optuna/optuna/pull/6938"
+source_access = "auto"
+built_at = "2026-11-12T05:39:13.246073+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:bf39d2ea397e6c2e31e90d19af39105a547924f591acb0e3d24b3ab899f655b8"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-04T06:40:56Z"
+diff_format = "unified"
+context_files = [
+    "optuna/visualization/_pareto_front.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 7
+difficulty = "small"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

@@ -1,0 +1,64 @@
+version = "1.0"
+
+[task]
+name = "default/facebook__react-38128"
+description = "[Flight] Fix hooks in streamed Server Components"
+
+[metadata]
+difficulty = "large"
+category = "bugfix"
+keywords = [
+    "react",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "facebook/react"
+ref = "2363bc2b85edc36889a739f3581a879eb75f4fb8"
+reference = "https://github.com/react/react/pull/38128"
+source_access = "auto"
+built_at = "2026-11-12T05:45:20.942700+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:496aa2fadc1314be29f936711e213f369250579060807e3528997ae62dae765c"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-06T15:19:02Z"
+diff_format = "unified"
+context_files = [
+    "packages/react-server-dom-webpack/src/__tests__/ReactFlightDOM-test.js",
+    "packages/react-server/src/ReactFlightHooks.js",
+    "packages/react-server/src/ReactFlightServer.js",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 251
+difficulty = "large"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

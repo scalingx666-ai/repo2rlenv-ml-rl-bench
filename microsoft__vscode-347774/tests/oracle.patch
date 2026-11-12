@@ -1,0 +1,70 @@
+diff --git a/.vscode/tasks.json b/.vscode/tasks.json
+index a70e9655186c4..68e34604f0699 100644
+--- a/.vscode/tasks.json
++++ b/.vscode/tasks.json
+@@ -508,7 +508,7 @@
+ 			],
+ 			"group": "build",
+ 			"label": "tsec-compile-check",
+-			"detail": "node_modules/tsec/bin/tsec -p src/tsconfig.json --noEmit"
++			"detail": "Runs the tsec security rules over src/tsconfig.tsec.json"
+ 		},
+ 		{
+ 			"label": "Launch Monaco Editor Vite",
+diff --git a/build/lib/tsec.ts b/build/lib/tsec.ts
+new file mode 100644
+index 0000000000000..af5c6dec784d3
+--- /dev/null
++++ b/build/lib/tsec.ts
+@@ -0,0 +1,38 @@
++/*---------------------------------------------------------------------------------------------
++ *  Copyright (c) Microsoft Corporation. All rights reserved.
++ *  Licensed under the MIT License. See License.txt in the project root for license information.
++ *--------------------------------------------------------------------------------------------*/
++
++import { createRequire } from 'module';
++import path from 'path';
++import type * as ts from 'typescript';
++
++//
++// Runs the security rules of tsec over src/tsconfig.tsec.json. The tsec command line also type
++// checks the whole program first, which takes most of its time and repeats the type check of
++// the compilation, so this script runs only the rules.
++//
++
++/** The tsec modules, and the TypeScript that tsec resolves. */
++const tsecRequire = createRequire(path.join(import.meta.dirname, '..', '..', 'node_modules', 'tsec', 'package.json'));
++const typescript: typeof ts = tsecRequire('typescript');
++const { performCheck }: { performCheck(program: ts.Program, host: ts.CompilerHost): ts.Diagnostic[] } = tsecRequire('./lib/packages/tsec/build.js');
++const { createCompilerHost }: { createCompilerHost(config: ts.ParsedCommandLine): ts.CompilerHost } = tsecRequire('./lib/packages/tsec/compiler_host.js');
++const { createDiagnosticsReporter }: { createDiagnosticsReporter(options: ts.CompilerOptions): (diagnostics: readonly ts.Diagnostic[], withSummary: boolean) => number } = tsecRequire('./lib/packages/tsec/report.js');
++
++const configPath = path.join(import.meta.dirname, '..', '..', 'src', 'tsconfig.tsec.json');
++const config = typescript.getParsedCommandLineOfConfigFile(configPath, {}, {
++	...typescript.sys,
++	onUnRecoverableConfigFileDiagnostic: diagnostic => {
++		throw new Error(typescript.flattenDiagnosticMessageText(diagnostic.messageText, '\n'));
++	},
++});
++if (!config) {
++	throw new Error(`Could not read ${configPath}.`);
++}
++
++const host = createCompilerHost(config);
++const program = typescript.createProgram(config.fileNames, config.options, host);
++const diagnostics = [...config.errors, ...performCheck(program, host)];
++const errorCount = createDiagnosticsReporter(config.options)(typescript.sortAndDeduplicateDiagnostics(diagnostics), /*withSummary*/ true);
++process.exitCode = errorCount === 0 ? 0 : 1;
+diff --git a/package.json b/package.json
+index 295821b6247fc..5b27a63e92ac2 100644
+--- a/package.json
++++ b/package.json
+@@ -76,7 +76,7 @@
+     "download-builtin-extensions": "node build/lib/builtInExtensions.ts",
+     "download-builtin-extensions-cg": "node build/lib/builtInExtensionsCG.ts",
+     "monaco-compile-check": "tsc --project src/tsconfig.monaco.json --noEmit",
+-    "tsec-compile-check": "node --max-old-space-size=8192 node_modules/tsec/bin/tsec -p src/tsconfig.tsec.json",
++    "tsec-compile-check": "node --max-old-space-size=8192 build/lib/tsec.ts",
+     "vscode-dts-compile-check": "tsc --project src/tsconfig.vscode-dts.json && tsc --project src/tsconfig.vscode-proposed-dts.json",
+     "valid-layers-check": "node build/checker/layersChecker.ts && node build/checker/layersTypeCheck.ts",
+     "define-class-fields-check": "node --max-old-space-size=8192 build/lib/propertyInitOrderChecker.ts && tsc --project src/tsconfig.defineClassFields.json",

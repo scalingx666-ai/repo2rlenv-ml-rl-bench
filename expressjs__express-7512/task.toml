@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/expressjs__express-7512"
+description = "docs: fix typos and a stale API reference in lib comments"
+
+[metadata]
+difficulty = "small"
+category = "bugfix"
+keywords = [
+    "express",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "expressjs/express"
+ref = "9efc29e280018dafc1f0617f3a3d28f4e463b7be"
+reference = "https://github.com/expressjs/express/pull/7512"
+source_access = "auto"
+built_at = "2026-11-12T05:48:53.727173+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:e61cb243923266af963344a401f5e0ec279f4925c13a03f5d876b7ac0e90910d"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-10-09T11:53:55Z"
+diff_format = "unified"
+context_files = [
+    "lib/request.js",
+    "lib/response.js",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 9
+difficulty = "small"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

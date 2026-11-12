@@ -1,0 +1,64 @@
+version = "1.0"
+
+[task]
+name = "default/ggml-org__llama.cpp-32089"
+description = "llama : reuse graph result instances across scheduler reserves"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "llama.cpp",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "ggml-org/llama.cpp"
+ref = "ccd360f060a0f17b87ee0d4c5d91ee84cfdff484"
+reference = "https://github.com/ggml-org/llama.cpp/pull/32089"
+source_access = "auto"
+built_at = "2026-11-12T05:42:19.731870+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:d30fba650ad5f386a5f4178aa607db69c89d678e1a58e1a1d95762305a4c05d8"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-11T17:58:40Z"
+diff_format = "unified"
+context_files = [
+    "src/llama-context.cpp",
+    "src/llama-graph.cpp",
+    "src/llama-graph.h",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 40
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

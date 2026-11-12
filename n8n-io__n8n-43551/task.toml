@@ -1,0 +1,64 @@
+version = "1.0"
+
+[task]
+name = "default/n8n-io__n8n-43551"
+description = "ci: Run the affected unit, integration and DB tests in the merge queue (no-changelog)"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "n8n",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "n8n-io/n8n"
+ref = "5413bef3ad6dca0f576dd9874ef35c09b29855b7"
+reference = "https://github.com/n8n-io/n8n/pull/43551"
+source_access = "auto"
+built_at = "2026-11-12T05:45:43.406594+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:bb8d01e10f4c81d23291c9a91ba7d49596bd20378910959ee1ba47b5a636e2a1"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-11T16:24:16Z"
+diff_format = "unified"
+context_files = [
+    ".github/scripts/db-test-matrix.mjs",
+    ".github/scripts/db-test-matrix.test.mjs",
+    ".github/workflows/ci-pull-requests.yml",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 59
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

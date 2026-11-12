@@ -1,0 +1,65 @@
+version = "1.0"
+
+[task]
+name = "default/n8n-io__n8n-43550"
+description = "fix: Accept custom OpenAI-compatible model IDs in v2"
+
+[metadata]
+difficulty = "large"
+category = "bugfix"
+keywords = [
+    "n8n",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "n8n-io/n8n"
+ref = "5413bef3ad6dca0f576dd9874ef35c09b29855b7"
+reference = "https://github.com/n8n-io/n8n/pull/43550"
+source_access = "auto"
+built_at = "2026-11-12T05:45:44.973727+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:35cb64a7c5c15f66c5ecf7e9568c33f813b2653d2f18b623a8294e16091840a8"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-11T17:04:53Z"
+diff_format = "unified"
+context_files = [
+    "packages/@n8n/nodes-langchain/nodes/agents/Agent/agents/ToolsAgent/V2/execute.ts",
+    "packages/@n8n/nodes-langchain/nodes/agents/Agent/test/ToolsAgent/ToolsAgentV2.customModels.test.ts",
+    "packages/@n8n/nodes-langchain/nodes/llms/LMChatOpenAi/LmChatOpenAi.node.ts",
+    "packages/@n8n/nodes-langchain/nodes/llms/LMChatOpenAi/custom-endpoint-chat-openai.ts",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 458
+difficulty = "large"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

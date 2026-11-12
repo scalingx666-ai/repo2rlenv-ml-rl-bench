@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/jax-ml__jax-42521"
+description = "[jax-buildcop] Eliminate redundant XLA compilations in `hyp1f1`, `hyp2f1`, and `betaln` gradient tests"
+
+[metadata]
+difficulty = "large"
+category = "bugfix"
+keywords = [
+    "jax",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "jax-ml/jax"
+ref = "941f3e82a5a1a45b9c7ffba90a08c2d4fe757cb2"
+reference = "https://github.com/jax-ml/jax/pull/42521"
+source_access = "auto"
+built_at = "2026-11-12T05:35:09.519967+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:ac06739ba6fa8791a77268e2463396741c402b4b91672eac9b6c8f43893da7f5"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-11T16:19:55Z"
+diff_format = "unified"
+context_files = [
+    "jax/_src/scipy/special.py",
+    "tests/lax_scipy_special_functions_test.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 203
+difficulty = "large"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

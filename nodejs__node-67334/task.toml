@@ -1,0 +1,66 @@
+version = "1.0"
+
+[task]
+name = "default/nodejs__node-67334"
+description = "tools: update nixpkgs-unstable to 4fe25e12eb9f4c744966dd3de5a05246cf0"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "node",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "nodejs/node"
+ref = "ae353ec38d57385e8b06cc14521ef75718cdd86c"
+reference = "https://github.com/nodejs/node/pull/67334"
+source_access = "auto"
+built_at = "2026-11-12T05:46:42.526152+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:138965ba6993bc747153c8b778e5f531e339af5fc2ddd202d08cb9222c69e851"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-09T23:27:43Z"
+diff_format = "unified"
+context_files = [
+    ".github/workflows/nix-changes.yml",
+    "tools/nix/ci-shell.nix",
+    "tools/nix/list-requisites.sh",
+    "tools/nix/pkgs-26.05.nix",
+    "tools/nix/pkgs.nix",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 45
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

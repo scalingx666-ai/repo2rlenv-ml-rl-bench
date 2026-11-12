@@ -1,0 +1,65 @@
+version = "1.0"
+
+[task]
+name = "default/apache__airflow-76924"
+description = "Copy the stack trace from the Dag import error modals"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "airflow",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "apache/airflow"
+ref = "e42b5a92aeb6d8c1a224958cbe498ae1774963da"
+reference = "https://github.com/apache/airflow/pull/76924"
+source_access = "auto"
+built_at = "2026-11-12T05:42:42.144386+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:33ee4cfc43f231aedf6ad2a3d0a5121756e6fbffcfe1eccc5e3d5a4fc588d0ed"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-11T18:24:35Z"
+diff_format = "unified"
+context_files = [
+    "airflow-core/src/airflow/ui/src/components/DagImportErrorDetails.tsx",
+    "airflow-core/src/airflow/ui/src/components/DagImportErrorModal.test.tsx",
+    "airflow-core/src/airflow/ui/src/pages/Dashboard/Stats/DagImportErrorsModal.test.tsx",
+    "airflow-core/src/airflow/ui/src/pages/Dashboard/Stats/DagImportErrorsModal.tsx",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 78
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

@@ -1,0 +1,219 @@
+diff --git a/src/vs/platform/agentHost/common/sshConfigParsing.ts b/src/vs/platform/agentHost/common/sshConfigParsing.ts
+index 15286578611dc..31c2c0c551c18 100644
+--- a/src/vs/platform/agentHost/common/sshConfigParsing.ts
++++ b/src/vs/platform/agentHost/common/sshConfigParsing.ts
+@@ -34,6 +34,48 @@ export function parseSSHConfigHostEntries(content: string): string[] {
+ 	return hosts;
+ }
+ 
++/** Parses Include arguments with OpenSSH quoting, escapes and comments; undefined indicates invalid quotes or an empty path. */
++export function parseSSHConfigIncludePaths(value: string): string[] | undefined {
++	const paths: string[] = [];
++	let index = 0;
++	while (index < value.length) {
++		while (value[index] === ' ' || value[index] === '\t') {
++			index++;
++		}
++		if (index === value.length || value[index] === '#') {
++			break;
++		}
++
++		let path = '';
++		let quote: '"' | '\'' | undefined;
++		while (index < value.length) {
++			const char = value[index++];
++			if (char === '\\') {
++				const next = value[index];
++				if (next === '"' || next === '\'' || next === '\\' || (!quote && next === ' ')) {
++					path += next;
++					index++;
++				} else {
++					path += char;
++				}
++			} else if (!quote && (char === ' ' || char === '\t')) {
++				break;
++			} else if (!quote && (char === '"' || char === '\'')) {
++				quote = char;
++			} else if (char === quote) {
++				quote = undefined;
++			} else {
++				path += char;
++			}
++		}
++		if (quote || !path) {
++			return undefined;
++		}
++		paths.push(path);
++	}
++	return paths;
++}
++
+ /** Retains token boundaries so the node layer can recover unquoted paths using filesystem evidence. */
+ export function tokenizeSSHPathList(value: string): { path: string; start: number; end: number; quoted: boolean }[] {
+ 	const paths: { path: string; start: number; end: number; quoted: boolean }[] = [];
+diff --git a/src/vs/platform/agentHost/node/sshRemoteAgentHostService.ts b/src/vs/platform/agentHost/node/sshRemoteAgentHostService.ts
+index 531efa8700a01..c8f30db10c546 100644
+--- a/src/vs/platform/agentHost/node/sshRemoteAgentHostService.ts
++++ b/src/vs/platform/agentHost/node/sshRemoteAgentHostService.ts
+@@ -75,7 +75,7 @@ import {
+ 	waitForNewStandaloneEndpoint,
+ } from './sshRemoteAgentHostHelpers.js';
+ import { ensureRemoteAgentHostCliInstalled, type IRemoteAgentHostCliInstallResult } from './remoteAgentHostCliInstaller.js';
+-import { parseSSHConfigHostEntries, parseSSHGOutput, stripSSHComment } from '../common/sshConfigParsing.js';
++import { parseSSHConfigHostEntries, parseSSHConfigIncludePaths, parseSSHGOutput } from '../common/sshConfigParsing.js';
+ import { removeAnsiEscapeCodes } from '../../../base/common/strings.js';
+ import { expandSSHProxyCommand, SSHProxyCommand } from './sshProxyCommand.js';
+ import { resolveSSHKnownHostsFiles, SSHKnownHostsResolutionError } from './sshConfigPaths.js';
+@@ -1422,8 +1422,11 @@ export class SSHRemoteAgentHostMainService extends Disposable implements ISSHRem
+ 				continue;
+ 			}
+ 
+-			const rawValue = stripSSHComment(includeMatch[1]);
+-			const patterns = rawValue.split(/\s+/).filter(Boolean);
++			const patterns = parseSSHConfigIncludePaths(includeMatch[1]);
++			if (!patterns) {
++				this._logService.warn(`${LOG_PREFIX} Skipping invalid SSH Include directive in ${configDir}`);
++				continue;
++			}
+ 
+ 			for (const rawPattern of patterns) {
+ 				const pattern = rawPattern.replace(/^~/, os.homedir());
+diff --git a/src/vs/platform/agentHost/test/common/sshConfigParsing.test.ts b/src/vs/platform/agentHost/test/common/sshConfigParsing.test.ts
+index 0be9feb881bf7..793d5afdf7d80 100644
+--- a/src/vs/platform/agentHost/test/common/sshConfigParsing.test.ts
++++ b/src/vs/platform/agentHost/test/common/sshConfigParsing.test.ts
+@@ -5,7 +5,7 @@
+ 
+ import assert from 'assert';
+ import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
+-import { parseSSHConfigHostEntries, parseSSHGOutput } from '../../common/sshConfigParsing.js';
++import { parseSSHConfigHostEntries, parseSSHConfigIncludePaths, parseSSHGOutput } from '../../common/sshConfigParsing.js';
+ 
+ suite('SSH Config Parsing', () => {
+ 
+@@ -120,6 +120,47 @@ suite('SSH Config Parsing', () => {
+ 		});
+ 	});
+ 
++	suite('parseSSHConfigIncludePaths', () => {
++
++		test('parses multiple quoted and unquoted paths', () => {
++			assert.deepStrictEqual(parseSSHConfigIncludePaths('  ~/.ssh/config.d/* "/absolute/config" "relative directory/config"\t\'other directory/config\' '), [
++				'~/.ssh/config.d/*', '/absolute/config', 'relative directory/config', 'other directory/config',
++			]);
++		});
++
++		test('handles partially quoted paths and OpenSSH escapes', () => {
++			assert.deepStrictEqual(parseSSHConfigIncludePaths(String.raw`/configs/"my directory"/config escaped\ space/config "escaped\"quote" 'escaped\'quote'`), [
++				'/configs/my directory/config', 'escaped space/config', 'escaped"quote', 'escaped\'quote',
++			]);
++		});
++
++		test('recognizes comments only between arguments', () => {
++			assert.deepStrictEqual([
++				parseSSHConfigIncludePaths('"directory # one/config" \'directory # two/config\' literal#hash\t# ignored/config'),
++				parseSSHConfigIncludePaths('config # ignored/config'),
++				parseSSHConfigIncludePaths('# ignored/config'),
++			], [
++				['directory # one/config', 'directory # two/config', 'literal#hash'],
++				['config'],
++				[],
++			]);
++		});
++
++		test('preserves Windows paths and decodes escaped backslashes', () => {
++			assert.deepStrictEqual(parseSSHConfigIncludePaths(String.raw`"C:\Users\Test User\ssh_config" C:/ProgramData/ssh/config "\\\\server\share\ssh_config"`), [
++				'C:\\Users\\Test User\\ssh_config', 'C:/ProgramData/ssh/config', '\\\\server\\share\\ssh_config',
++			]);
++		});
++
++		test('rejects unterminated quotes and empty paths without returning partial results', () => {
++			assert.deepStrictEqual([
++				'"unterminated', '\'unterminated', 'valid "unterminated', '""', 'valid \'\' other',
++			].map(parseSSHConfigIncludePaths), [
++				undefined, undefined, undefined, undefined, undefined,
++			]);
++		});
++	});
++
+ 	suite('parseSSHGOutput', () => {
+ 
+ 		test('parses standard ssh -G output', () => {
+diff --git a/src/vs/platform/agentHost/test/node/sshRemoteAgentHostService.test.ts b/src/vs/platform/agentHost/test/node/sshRemoteAgentHostService.test.ts
+index 59f410fbda941..9aabe76e5121e 100644
+--- a/src/vs/platform/agentHost/test/node/sshRemoteAgentHostService.test.ts
++++ b/src/vs/platform/agentHost/test/node/sshRemoteAgentHostService.test.ts
+@@ -1920,6 +1920,73 @@ class AuthAttemptsTestService extends SSHRemoteAgentHostMainService {
+ 	}
+ }
+ 
++suite('SSHRemoteAgentHostMainService - SSH config Includes', () => {
++
++	const disposables = ensureNoDisposablesAreLeakedInTestSuite();
++	let directory: string;
++	let service: SSHRemoteAgentHostMainService;
++	let logService: RecordingLogService;
++
++	setup(async () => {
++		directory = await fsp.mkdtemp(join(os.tmpdir(), 'vscode-ssh-includes-'));
++		logService = new RecordingLogService();
++		service = disposables.add(new SSHRemoteAgentHostMainService(
++			logService,
++			{ _serviceBrand: undefined, quality, dataFolderName } as IProductService,
++			NullTelemetryService,
++		));
++	});
++
++	teardown(async () => {
++		await fsp.rm(directory, { recursive: true, force: true });
++	});
++
++	test('discovers the same hosts through quoted and unquoted Include paths', async () => {
++		const file = join(directory, 'ssh_config');
++		await fsp.writeFile(file, 'Host pj-jump pj-target\n');
++		const values = ['ssh_config', '"ssh_config"', JSON.stringify(file)];
++		const hosts: string[][] = [];
++		for (const value of values) {
++			hosts.push(await service['_parseSSHConfigHosts'](`Include ${value}`, directory));
++		}
++		assert.deepStrictEqual(hosts, values.map(() => ['pj-jump', 'pj-target']));
++	});
++
++	test('follows multiple quoted paths, nested Includes and globs without following comments', async () => {
++		const includeDirectory = join(directory, 'included files');
++		const globDirectory = join(directory, 'more configs');
++		await fsp.mkdir(includeDirectory);
++		await fsp.mkdir(globDirectory);
++		const jumpFile = join(includeDirectory, 'jump config');
++		const ignoredFile = join(directory, 'ignored');
++		await fsp.writeFile(jumpFile, 'Host pj-jump\nInclude "nested # config"\n');
++		await fsp.writeFile(join(includeDirectory, 'nested # config'), `Host pj-target\nInclude ${JSON.stringify(jumpFile)}\n`);
++		await fsp.writeFile(join(globDirectory, 'other.conf'), 'Host pj-other\n');
++		await fsp.writeFile(ignoredFile, 'Host must-not-appear\n');
++
++		assert.deepStrictEqual(await service['_parseSSHConfigHosts'](
++			`Include "included files/jump config" ${JSON.stringify(join(globDirectory, '*.conf'))}\t# ${JSON.stringify(ignoredFile)}`,
++			directory,
++		), ['pj-jump', 'pj-target', 'pj-other']);
++	});
++
++	test('warns about malformed Includes and continues discovering other hosts', async () => {
++		const file = join(directory, 'ssh_config');
++		await fsp.writeFile(file, 'Host included\n');
++		const hosts = await service['_parseSSHConfigHosts']([
++			'Host direct',
++			'Include "unterminated',
++			`Include "" ${JSON.stringify(file)}`,
++			`Include ${JSON.stringify(file)}`,
++		].join('\n'), directory);
++
++		assert.deepStrictEqual({ hosts, warnings: logService.warnings.length }, {
++			hosts: ['direct', 'included'],
++			warnings: 2,
++		});
++	});
++});
++
+ suite('SSHRemoteAgentHostMainService - resolveSSHConfig', () => {
+ 
+ 	const disposables = ensureNoDisposablesAreLeakedInTestSuite();
