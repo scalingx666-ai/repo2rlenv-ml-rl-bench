@@ -1,0 +1,62 @@
+version = "1.0"
+
+[task]
+name = "default/huggingface__datasets-8960"
+description = "Fix batch(by_column=) default accumulation causing full downloads"
+
+[metadata]
+difficulty = "small"
+category = "bugfix"
+keywords = [
+    "datasets",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "huggingface/datasets"
+ref = "62e0b421bb996e8536d28f4fea662a4045bab82d"
+reference = "https://github.com/huggingface/datasets/pull/8960"
+source_access = "auto"
+built_at = "2026-11-11T14:28:45.622411+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:1fd3ffda3244f022b3791e4f521ef08a929c1511404ded53865e37e621890606"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-04T16:20:33Z"
+diff_format = "unified"
+context_files = [
+    "src/datasets/iterable_dataset.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 14
+difficulty = "small"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

@@ -1,0 +1,66 @@
+version = "1.0"
+
+[task]
+name = "default/huggingface__datasets-8958"
+description = "fix(mesh): accept .gltf in the Mesh feature and the meshfolder builder"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "datasets",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "huggingface/datasets"
+ref = "62e0b421bb996e8536d28f4fea662a4045bab82d"
+reference = "https://github.com/huggingface/datasets/pull/8958"
+source_access = "auto"
+built_at = "2026-11-11T14:28:49.297644+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:c438ae8340d246b9cb328a6aef4ef8d4198650f6d70bf7c7717904f5b50a8ccc"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-04T17:56:43Z"
+diff_format = "unified"
+context_files = [
+    "docs/source/about_dataset_features.mdx",
+    "src/datasets/features/mesh.py",
+    "src/datasets/packaged_modules/meshfolder/meshfolder.py",
+    "tests/features/test_mesh.py",
+    "tests/packaged_modules/test_meshfolder.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 39
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/huggingface__accelerate-4386"
+description = "Allow clip_grad_value_ under FSDP2"
+
+[metadata]
+difficulty = "small"
+category = "bugfix"
+keywords = [
+    "accelerate",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "huggingface/accelerate"
+ref = "3008af926ffe3e04ffe6fbe3d87494193fc85041"
+reference = "https://github.com/huggingface/accelerate/pull/4386"
+source_access = "auto"
+built_at = "2026-11-11T14:24:56.989209+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:f25c3bb15635455fd21f0aba1a26132cf7d9abb3dc2b631392457e3189df491f"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-02T15:20:44Z"
+diff_format = "unified"
+context_files = [
+    "src/accelerate/accelerator.py",
+    "tests/fsdp/test_fsdp.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 18
+difficulty = "small"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

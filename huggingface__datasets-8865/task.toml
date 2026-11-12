@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/huggingface__datasets-8865"
+description = "Fix concatenation cache fingerprints for different axes"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "datasets",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "huggingface/datasets"
+ref = "062399091924f21b2089c84e5824a26efc9514a9"
+reference = "https://github.com/huggingface/datasets/pull/8865"
+source_access = "auto"
+built_at = "2026-11-11T14:29:12.842594+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:8b24ce71bb00db8cc935f4d9e16cfe7efe61147ac2833057772496ea40de40d3"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-10-23T12:22:31Z"
+diff_format = "unified"
+context_files = [
+    "src/datasets/arrow_dataset.py",
+    "tests/test_arrow_dataset.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 21
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

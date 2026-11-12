@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/huggingface__peft-4081"
+description = "ENH: Svd lowrank option for lora intruder dimension reduction"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "peft",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "huggingface/peft"
+ref = "21c63eea07ae2907cedb242693fbe45bc2e66664"
+reference = "https://github.com/huggingface/peft/pull/4081"
+source_access = "auto"
+built_at = "2026-11-11T14:27:23.631728+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:0c08ed34e9c174ec8298a7fe9a41c94d0ae07d1f9c6a101d5d27ff3e3407af56"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-11T02:52:54Z"
+diff_format = "unified"
+context_files = [
+    "src/peft/tuners/lora/intruders.py",
+    "tests/test_lora_intruders.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 72
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

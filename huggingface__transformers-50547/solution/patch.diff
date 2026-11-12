@@ -1,0 +1,30 @@
+diff --git a/src/transformers/models/step3p7/modeling_step3p7.py b/src/transformers/models/step3p7/modeling_step3p7.py
+index ece43dc5b2e4..86c3e55fa8be 100644
+--- a/src/transformers/models/step3p7/modeling_step3p7.py
++++ b/src/transformers/models/step3p7/modeling_step3p7.py
+@@ -110,8 +110,8 @@ def recomposition_frequencies(self, freq):
+         """
+         Recompose the frequencies into the final spatial layout used per each grid.
+         """
+-        freq_hw = freq.flatten(1)
+-        return torch.cat((freq_hw, freq_hw), dim=-1)
++        freq_wh = freq.flip(1).flatten(1)
++        return torch.cat((freq_wh, freq_wh), dim=-1)
+ 
+ 
+ class Step3p7VisionMLP(nn.Module):
+diff --git a/src/transformers/models/step3p7/modular_step3p7.py b/src/transformers/models/step3p7/modular_step3p7.py
+index 0ef59f547a7c..d08c83237341 100644
+--- a/src/transformers/models/step3p7/modular_step3p7.py
++++ b/src/transformers/models/step3p7/modular_step3p7.py
+@@ -603,8 +603,8 @@ def recomposition_frequencies(self, freq):
+         """
+         Recompose the frequencies into the final spatial layout used per each grid.
+         """
+-        freq_hw = freq.flatten(1)
+-        return torch.cat((freq_hw, freq_hw), dim=-1)
++        freq_wh = freq.flip(1).flatten(1)
++        return torch.cat((freq_wh, freq_wh), dim=-1)
+ 
+ 
+ class Step3p7VisionMLP(MiniMaxM3VLVisionMLP):

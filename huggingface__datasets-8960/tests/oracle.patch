@@ -1,0 +1,35 @@
+diff --git a/src/datasets/iterable_dataset.py b/src/datasets/iterable_dataset.py
+index 40584ff37cd..f2318a12152 100644
+--- a/src/datasets/iterable_dataset.py
++++ b/src/datasets/iterable_dataset.py
+@@ -4678,10 +4678,20 @@ def batch(
+                 Whether to drop the last incomplete batch.
+ 
+         Example:
++
++        Fixed batch size:
++
+         ```py
+-        >>> ds = load_dataset("some_dataset", streaming=True)
++        >>> ds = load_dataset("some_dataset", streaming=True, split="train")
+         >>> batched_ds = ds.batch(batch_size=32)
+         ```
++
++        Batches of successive samples with identical value for "my_column":
++
++        ```py
++        >>> ds = load_dataset("some_dataset", streaming=True, split="train")
++        >>> batched_ds = ds.batch(by_column="my_column")
++        ```
+         """
+         if batch_size is None and by_column is None:
+             raise ValueError("IterableDataset.batch() misses `batch_size` or `by_column` argument.")
+@@ -4697,7 +4707,7 @@ def batch(
+                     partial(_batch_accumulate_arrow_table_by_columns, columns=columns),
+                     with_indices=True,
+                     batched=True,
+-                    batch_size=batch_size,
++                    batch_size=batch_size or config.DEFAULT_MAX_BATCH_SIZE,
+                     drop_last_batch=drop_last_batch,
+                     features=features,
+                     is_batch_accumulate_arrow_table_function=True,

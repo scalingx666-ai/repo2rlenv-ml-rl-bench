@@ -1,0 +1,47 @@
+diff --git a/src/accelerate/accelerator.py b/src/accelerate/accelerator.py
+index 9a80c24f124..e666b8d7a07 100755
+--- a/src/accelerate/accelerator.py
++++ b/src/accelerate/accelerator.py
+@@ -2956,8 +2956,10 @@ def clip_grad_value_(self, parameters, clip_value):
+         ...     optimizer.step()
+         ```
+         """
+-        if self.distributed_type in [DistributedType.DEEPSPEED, DistributedType.FSDP]:
+-            raise Exception("DeepSpeed and FSDP  do not support `clip_grad_value_`. Use `clip_grad_norm_` instead.")
++        if self.distributed_type == DistributedType.DEEPSPEED or (
++            self.distributed_type == DistributedType.FSDP and not self.is_fsdp2
++        ):
++            raise Exception("DeepSpeed and FSDP1 do not support `clip_grad_value_`. Use `clip_grad_norm_` instead.")
+         self.unscale_gradients()
+         torch.nn.utils.clip_grad_value_(parameters, clip_value)
+ 
+diff --git a/tests/fsdp/test_fsdp.py b/tests/fsdp/test_fsdp.py
+index 03703a132bb..de79bf00b80 100644
+--- a/tests/fsdp/test_fsdp.py
++++ b/tests/fsdp/test_fsdp.py
+@@ -46,7 +46,7 @@
+     FSDP_SHARDING_STRATEGY,
+     FSDP_STATE_DICT_TYPE,
+ )
+-from accelerate.utils.dataclasses import FullyShardedDataParallelPlugin
++from accelerate.utils.dataclasses import FullyShardedDataParallelPlugin, GradScalerKwargs
+ from accelerate.utils.fsdp_utils import (
+     _get_model_state_dict,
+     _set_model_state_dict,
+@@ -551,6 +551,16 @@ def setUp(self):
+         super().setUp()
+         self.current_fsdp_version = 2
+ 
++    def test_clip_grad_value(self):
++        """`clip_grad_value_` must unscale FSDP2 gradients before clipping them."""
++        with patch_environment(**self.fsdp_envs[2]):
++            accelerator = Accelerator(mixed_precision="fp16", kwargs_handlers=[GradScalerKwargs(init_scale=8.0)])
++            model = torch.nn.Sequential(torch.nn.Linear(4, 4, bias=False))
++            model, _ = accelerator.prepare(model, torch.optim.SGD(model.parameters(), lr=0.1))
++            accelerator.backward(model(torch.tensor([[3.0, 0.5, -3.0, -0.5]], device=accelerator.device)).sum())
++            accelerator.clip_grad_value_(model.parameters(), 1.0)
++            assert model[0].weight.grad.full_tensor().tolist() == [[1.0, 0.5, -1.0, -0.5]] * 4
++
+     def test_param_mapping_error_handling(self):
+         """Test FSDP2's defensive error handling for parameter mapping failures in tied/non-tied cases."""
+         from unittest.mock import Mock, patch

@@ -1,0 +1,65 @@
+version = "1.0"
+
+[task]
+name = "default/huggingface__transformers-50582"
+description = "fix(pipelines): respect problem_type in image and video classification pipelines"
+
+[metadata]
+difficulty = "large"
+category = "bugfix"
+keywords = [
+    "transformers",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "huggingface/transformers"
+ref = "c4f1520d81a4ea92885003b4152d0d716aeff7d8"
+reference = "https://github.com/huggingface/transformers/pull/50582"
+source_access = "auto"
+built_at = "2026-11-11T14:31:06.506824+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:29807b18d67a4a2a505726411f098c5d2ff4bba73f676361d75bae275d03463e"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-11T12:54:05Z"
+diff_format = "unified"
+context_files = [
+    "src/transformers/pipelines/image_classification.py",
+    "src/transformers/pipelines/video_classification.py",
+    "tests/pipelines/test_pipelines_image_classification.py",
+    "tests/pipelines/test_pipelines_video_classification.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 109
+difficulty = "large"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

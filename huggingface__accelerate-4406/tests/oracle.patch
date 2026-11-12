@@ -1,0 +1,33 @@
+diff --git a/src/accelerate/utils/dataclasses.py b/src/accelerate/utils/dataclasses.py
+index 354e7227902..3d5a935262e 100644
+--- a/src/accelerate/utils/dataclasses.py
++++ b/src/accelerate/utils/dataclasses.py
+@@ -1318,7 +1318,7 @@ def __post_init__(self):
+                     "stage3_gather_16bit_weights_on_model_save": self.zero3_save_16bit_model,
+                 },
+             }
+-            if self.gradient_clipping:
++            if self.gradient_clipping is not None:
+                 config["gradient_clipping"] = self.gradient_clipping
+             self.hf_ds_config = HfDeepSpeedConfig(config)
+ 
+diff --git a/tests/deepspeed/test_deepspeed.py b/tests/deepspeed/test_deepspeed.py
+index 1b6dfc7bd35..72427f29152 100644
+--- a/tests/deepspeed/test_deepspeed.py
++++ b/tests/deepspeed/test_deepspeed.py
+@@ -104,6 +104,15 @@ def __init__(self):
+         self._name_or_path = "dummy"
+ 
+ 
++class DeepSpeedPluginTest(AccelerateTestCase):
++    @parameterized.expand([(0.0,), (1.0,), ("auto",)])
++    def test_gradient_clipping_is_preserved(self, gradient_clipping):
++        """An explicit zero must disable clipping instead of silently restoring DeepSpeed's default."""
++        plugin = DeepSpeedPlugin(gradient_clipping=gradient_clipping, zero_stage=2)
++
++        assert plugin.deepspeed_config["gradient_clipping"] == gradient_clipping
++
++
+ @require_deepspeed
+ @require_non_cpu
+ class DeepSpeedConfigIntegration(AccelerateTestCase):

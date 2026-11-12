@@ -1,0 +1,266 @@
+diff --git a/docs/source/dpo_trainer.md b/docs/source/dpo_trainer.md
+index 37230651428..4c0ddd58236 100644
+--- a/docs/source/dpo_trainer.md
++++ b/docs/source/dpo_trainer.md
+@@ -121,6 +121,7 @@ Several formulations of the objective have been proposed in the literature. Init
+ | `"discopop"` | The [DiscoPOP](https://huggingface.co/papers/2406.08414) paper uses LLMs to discover more efficient offline preference optimization losses. In the paper the proposed DiscoPOP loss (which is a log-ratio modulated loss) outperformed other optimization losses on different tasks (IMDb positive text generation, Reddit TLDR summarization, and Alpaca Eval 2.0). |
+ | `"sft"` | SFT (Supervised Fine-Tuning) loss is the negative log likelihood loss, used to train the model to generate preferred responses. |
+ | `"sigmoid_norm"` | The [SimPO](https://huggingface.co/papers/2405.14734) authors address the length-bias in the original sigmoid loss by normalizing by the number of non-mask tokens; TRL exposes this as `loss_type="sigmoid_norm"`. |
++| `"udpo"` | The [UDPO](https://huggingface.co/papers/2607.03248) authors propose an unbiased DPO loss under noisy preferences that, unlike `"robust"`, stays unbiased when the flip probability is overestimated. Use `label_smoothing` in [`DPOConfig`] to set the flip probability ε; valid values are in the range `[0.0, 0.5)`. |
+ 
+ ## Logged metrics
+ 
+diff --git a/docs/source/paper_index.md b/docs/source/paper_index.md
+index d64c31ffe02..7c61362008f 100644
+--- a/docs/source/paper_index.md
++++ b/docs/source/paper_index.md
+@@ -1265,6 +1265,33 @@ training_args = DPOConfig(
+ )
+ ```
+ 
++### Unbiased Alignment for Large Language Models with Noisy Preferences
++
++**📜 Paper**: https://huggingface.co/papers/2607.03248
++
++This paper models preference noise as labels flipped with probability  \\( \varepsilon \\) and inverts this transition, so that the policy trained on noisy preferences has the same optimum as with clean preferences. TRL implements the normalized form of the resulting Unbiased DPO (UDPO) loss, called α-UDPO in the paper:
++
++$$
++\mathcal{L}_{\text{UDPO}} = -\alpha \log \frac{e^{z} + a}{e^{z} + 1}, \quad z = \beta \left( \log \frac{\pi_\theta(y_w|x)}{\pi_{\text{ref}}(y_w|x)} - \log \frac{\pi_\theta(y_l|x)}{\pi_{\text{ref}}(y_l|x)} \right), \quad a = \frac{\varepsilon}{1 - \varepsilon}, \quad \alpha = \frac{1 + \sqrt{a}}{1 - \sqrt{a}},
++$$
++
++which is the DPO loss for  \\( a = 0 \\). The constant  \\( \alpha \\) keeps the maximum gradient magnitude at 1, as for DPO. Unlike [Robust DPO](#provably-robust-dpo-aligning-language-models-with-noisy-feedback), the paper shows that the optimum stays unbiased when the true flip probability is lower than the assumed  \\( \varepsilon \\) (Corollary 4.7), so  \\( \varepsilon \\) does not have to be estimated exactly. In TRL,  \\( \varepsilon \\) is set with `label_smoothing`. To use  \\( a = 0.8 \\), the value the paper recommends to practitioners:
++
++```python
++from trl import DPOConfig
++
++training_args = DPOConfig(
++    loss_type="udpo",
++    label_smoothing=4 / 9,  # flip probability ε, for a = ε / (1 - ε) = 0.8 as recommended in Appendix B.1 of the paper
++    beta=0.1,  # 0.1 for HH and UltraFeedback, 0.5 for TL;DR (Appendix B.1 of the paper)
++    learning_rate=5e-6,  # 5e-6 for Llama-3.2-3B and Qwen3-1.7B, 1e-6 for 8B models (Appendix B.1 of the paper)
++    num_train_epochs=3,  # Appendix B.1 of the paper
++    per_device_train_batch_size=16,  # total batch size of 128 on 8 GPUs (Appendix B.1 of the paper)
++    max_grad_norm=10.0,  # Appendix B.1 of the paper
++    warmup_ratio=0.1,  # Appendix B.1 of the paper
++)
++```
++
+ ## Kahneman–Tversky Optimization
+ 
+ Papers relating to the [`KTOTrainer`]
+diff --git a/tests/test_dpo_trainer.py b/tests/test_dpo_trainer.py
+index 2ab90987467..ea16d7a162d 100644
+--- a/tests/test_dpo_trainer.py
++++ b/tests/test_dpo_trainer.py
+@@ -12,6 +12,8 @@
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+ 
++import math
++
+ import pytest
+ import torch
+ import transformers
+@@ -483,6 +485,7 @@ def test_train_model(self, model_id):
+             "discopop",
+             "sft",
+             "sigmoid_norm",
++            "udpo",
+         ],
+     )
+     def test_train_loss_types(self, loss_type):
+@@ -491,7 +494,7 @@ def test_train_loss_types(self, loss_type):
+         training_args = DPOConfig(
+             output_dir=self.tmp_dir,
+             loss_type=loss_type,
+-            label_smoothing=1e-3 if loss_type == "exo_pair" else 0.0,
++            label_smoothing={"exo_pair": 1e-3, "udpo": 0.2}.get(loss_type, 0.0),
+             learning_rate=0.1,  # use higher lr because gradients are tiny and default lr can stall updates
+             report_to="none",
+             eval_strategy="steps",
+@@ -515,6 +518,47 @@ def test_train_loss_types(self, loss_type):
+             new_param = trainer.model.get_parameter(n)
+             assert not torch.equal(param, new_param), f"Parameter {n} has not changed."
+ 
++    def test_udpo_loss_value(self):
++        dataset = load_dataset("trl-internal-testing/zen", "standard_preference")
++
++        training_args = DPOConfig(
++            output_dir=self.tmp_dir,
++            loss_type="udpo",
++            label_smoothing=0.2,
++            learning_rate=0.1,  # move the policy away from the reference model, so that the reward margin is non-zero
++            report_to="none",
++        )
++        trainer = DPOTrainer(
++            model="trl-internal-testing/tiny-Qwen2ForCausalLM-2.5",
++            args=training_args,
++            train_dataset=dataset["train"],
++            eval_dataset=dataset["test"].select(range(1)),
++        )
++        trainer.train()
++        metrics = trainer.evaluate()
++
++        # With a single eval example, the eval loss is the normalized UDPO loss -α·log((e^z + a) / (e^z + 1)) at the
++        # logged reward margin z, with a = ε / (1 - ε) and α = (1 + √a) / (1 - √a). The log is written as
++        # log(1 - (1 - a) / (e^z + 1)) for precision.
++        z = metrics["eval_rewards/margins"]
++        a = 0.2 / (1 - 0.2)
++        alpha = (1 + math.sqrt(a)) / (1 - math.sqrt(a))
++        assert z != 0.0
++        assert metrics["eval_loss"] == pytest.approx(-alpha * math.log1p(-(1 - a) / (math.exp(z) + 1)), rel=1e-4)
++
++    def test_udpo_label_smoothing_out_of_range_raises(self):
++        dataset = load_dataset("trl-internal-testing/zen", "standard_preference", split="train")
++
++        # `label_smoothing` is the flip probability ε, not the paper's a = ε / (1 - ε), so a = 0.8 passed as is fails
++        training_args = DPOConfig(output_dir=self.tmp_dir, loss_type="udpo", label_smoothing=0.8, report_to="none")
++
++        with pytest.raises(ValueError, match=r"must lie in \[0.0, 0.5\) for the 'udpo' loss"):
++            DPOTrainer(
++                model="trl-internal-testing/tiny-Qwen2ForCausalLM-2.5",
++                args=training_args,
++                train_dataset=dataset,
++            )
++
+     def test_train_multi_loss_types(self):
+         dataset = load_dataset("trl-internal-testing/zen", "standard_preference", split="train")
+ 
+diff --git a/trl/trainer/dpo_config.py b/trl/trainer/dpo_config.py
+index 6e49da243f4..8aacaaf656d 100644
+--- a/trl/trainer/dpo_config.py
++++ b/trl/trainer/dpo_config.py
+@@ -82,8 +82,8 @@ class DPOConfig(_BaseConfig):
+         loss_type (`list[str]`, *optional*, defaults to `["sigmoid"]`):
+             Type of loss to use. Possible values are: `'sigmoid'`, `'hinge'`, `'ipo'`, `'exo_pair'`, `'nca_pair'`,
+             `'robust'`, `'bco_pair'`, `'sppo_hard'`, `'aot'`, `'aot_unpaired'`, `'apo_zero'`, `'apo_down'`,
+-            `'discopop'`, `'sft'`, `'sigmoid_norm'`. If multiple loss types are provided, they will be combined using
+-            the weights specified in `loss_weights`.
++            `'discopop'`, `'sft'`, `'sigmoid_norm'`, `'udpo'`. If multiple loss types are provided, they will be
++            combined using the weights specified in `loss_weights`.
+         loss_weights (`list[float]`, *optional*):
+             List of loss weights for multi-loss combinations. Used when combining multiple loss types. Example: `[0.8,
+             0.2, 1.0]` for MPO. If not provided, defaults to equal weights (`1.0`) for all loss types.
+@@ -96,15 +96,16 @@ class DPOConfig(_BaseConfig):
+             f-divergence regularizer between policy and reference (f-DPO paper). Possible values are: `reverse_kl`
+             (default), `forward_kl`, `js_divergence`, `alpha_divergence`. Only the loss types built on the
+             chosen-rejected reward difference support a non-default value: `'sigmoid'`, `'sigmoid_norm'`, `'hinge'`,
+-            `'ipo'`, `'exo_pair'`, `'robust'`, `'discopop'`, `'sft'`. The other loss types have no valid f-divergence
+-            generalization and are rejected with a non-default value.
++            `'ipo'`, `'exo_pair'`, `'robust'`, `'discopop'`, `'sft'`, `'udpo'`. The other loss types have no valid
++            f-divergence generalization and are rejected with a non-default value.
+         f_alpha_divergence_coef (`float`, *optional*, defaults to `0.5`):
+             α coefficient for the α-divergence u^-α regularizer, used only when `f_divergence_type='alpha_divergence'`.
+         label_smoothing (`float`, *optional*, defaults to `0.0`):
+-            Label smoothing parameter used in Robust DPO and EXO. In Robust DPO, it is interpreted as the probability
+-            that a preference label is flipped and must lie in [0.0, 0.5); a typical value recommended by the Robust
+-            DPO paper is 0.1. In EXO, it corresponds to the ε label smoothing parameter, for which the paper recommends
+-            a typical value of 1e-3.
++            Label smoothing parameter used in Robust DPO, UDPO and EXO. In Robust DPO and UDPO, it is interpreted as
++            the probability ε that a preference label is flipped and must lie in [0.0, 0.5); a typical value
++            recommended by the Robust DPO paper is 0.1. UDPO uses it to set a = ε / (1 - ε), and the UDPO paper
++            recommends a = 0.8, that is ε = 4/9. In EXO, it corresponds to the ε label smoothing parameter, for which
++            the paper recommends a typical value of 1e-3.
+         beta (`float`, *optional*, defaults to `0.1`):
+             Parameter controlling the deviation from the reference model. Higher β means less deviation from the
+             reference model. For the IPO loss (`loss_type='ipo'`), this value is the regularization parameter denoted
+@@ -247,8 +248,8 @@ class DPOConfig(_BaseConfig):
+         metadata={
+             "help": "Type of loss to use. Possible values are: `'sigmoid'`, `'hinge'`, `'ipo'`, `'exo_pair'`, "
+             "`'nca_pair'`, `'robust'`, `'bco_pair'`, `'sppo_hard'`, `'aot'`, `'aot_unpaired'`, `'apo_zero'`, "
+-            "`'apo_down'`, `'discopop'`, `'sft'`, `'sigmoid_norm'`. If multiple loss types are provided, they will be "
+-            "combined using the weights specified in `loss_weights`.",
++            "`'apo_down'`, `'discopop'`, `'sft'`, `'sigmoid_norm'`, `'udpo'`. If multiple loss types are provided, "
++            "they will be combined using the weights specified in `loss_weights`.",
+         },
+     )
+     loss_weights: list[float] | None = field(
+@@ -274,8 +275,8 @@ class DPOConfig(_BaseConfig):
+             "help": "f-divergence regularizer between policy and reference (f-DPO paper). Possible values are: "
+             "`reverse_kl` (default), `forward_kl`, `js_divergence`, `alpha_divergence`. Only the loss types built on "
+             "the chosen-rejected reward difference support a non-default value: `'sigmoid'`, `'sigmoid_norm'`, "
+-            "`'hinge'`, `'ipo'`, `'exo_pair'`, `'robust'`, `'discopop'`, `'sft'`. The other loss types have no valid "
+-            "f-divergence generalization and are rejected with a non-default value.",
++            "`'hinge'`, `'ipo'`, `'exo_pair'`, `'robust'`, `'discopop'`, `'sft'`, `'udpo'`. The other loss types have "
++            "no valid f-divergence generalization and are rejected with a non-default value.",
+         },
+     )
+     f_alpha_divergence_coef: float = field(
+@@ -288,10 +289,11 @@ class DPOConfig(_BaseConfig):
+     label_smoothing: float = field(
+         default=0.0,
+         metadata={
+-            "help": "Label smoothing parameter used in Robust DPO and EXO. In Robust DPO, it is interpreted as the "
+-            "probability that a preference label is flipped and must lie in [0.0, 0.5); a typical value recommended "
+-            "by the Robust DPO paper is 0.1. In EXO, it corresponds to the ε label smoothing parameter, for which the "
+-            "paper recommends a typical value of 1e-3."
++            "help": "Label smoothing parameter used in Robust DPO, UDPO and EXO. In Robust DPO and UDPO, it is "
++            "interpreted as the probability ε that a preference label is flipped and must lie in [0.0, 0.5); a typical "
++            "value recommended by the Robust DPO paper is 0.1. UDPO uses it to set a = ε / (1 - ε), and the UDPO paper "
++            "recommends a = 0.8, that is ε = 4/9. In EXO, it corresponds to the ε label smoothing parameter, for which "
++            "the paper recommends a typical value of 1e-3."
+         },
+     )
+     beta: float = field(
+diff --git a/trl/trainer/dpo_trainer.py b/trl/trainer/dpo_trainer.py
+index 354a0967d08..47448e81fa5 100644
+--- a/trl/trainer/dpo_trainer.py
++++ b/trl/trainer/dpo_trainer.py
+@@ -859,7 +859,17 @@ def __init__(
+         self.f_alpha_divergence_coef = args.f_alpha_divergence_coef
+         # The f-DPO reparameterization leaves a β·log Z(x) term that only cancels in the chosen-rejected reward
+         # difference, so the other losses have no valid f-divergence generalization.
+-        f_divergence_loss_types = {"sigmoid", "sigmoid_norm", "hinge", "ipo", "exo_pair", "robust", "discopop", "sft"}
++        f_divergence_loss_types = {
++            "sigmoid",
++            "sigmoid_norm",
++            "hinge",
++            "ipo",
++            "exo_pair",
++            "robust",
++            "discopop",
++            "sft",
++            "udpo",
++        }
+         if self.f_divergence_type != "reverse_kl" and not set(self.loss_types) <= f_divergence_loss_types:
+             raise ValueError(
+                 f"`f_divergence_type='{self.f_divergence_type}'` is only supported for the following loss types: "
+@@ -878,6 +888,13 @@ def __init__(
+                 "The `label_smoothing` parameter should lie in [0.0, 0.5) for the 'robust' loss. You provided "
+                 f"{self.label_smoothing}."
+             )
++        if "udpo" in self.loss_types and not (0.0 <= self.label_smoothing < 0.5):
++            # With ε >= 0.5, a = ε / (1 - ε) >= 1 and the UDPO loss no longer prefers the chosen completions
++            raise ValueError(
++                "The `label_smoothing` parameter must lie in [0.0, 0.5) for the 'udpo' loss, as it is the probability "
++                f"ε that a preference label is flipped. You provided {self.label_smoothing}. To use the parameter a "
++                "of the UDPO paper, set `label_smoothing=a / (1 + a)`."
++            )
+         if "exo_pair" in self.loss_types and self.label_smoothing == 0.0:
+             raise ValueError(
+                 "Label smoothing must be greater than 0.0 when using 'exo_pair' loss. The EXO paper recommends a "
+@@ -1560,11 +1577,23 @@ def _compute_loss(self, model, inputs, return_outputs):
+                 delta = chosen_avg_score - rejected_avg_score
+                 per_sequence_loss = -F.logsigmoid(self.beta * delta)
+ 
++            elif loss_type == "udpo":
++                # Normalized UDPO loss, α-UDPO in the paper (https://huggingface.co/papers/2607.03248, Eq. 14 scaled
++                # by α): -α·log((e^z + a) / (e^z + 1)), where a = ε / (1 - ε), ε = label_smoothing is the assumed
++                # probability that a label is flipped, and α = (1 + √a) / (1 - √a) keeps the maximum gradient
++                # magnitude at 1, as for "sigmoid". The log is computed in log space as log(σ(z) + a·σ(-z)) for
++                # numerical stability; ε = 0 recovers "sigmoid".
++                a = torch.tensor(self.label_smoothing / (1 - self.label_smoothing), device=device)
++                alpha = (1 + torch.sqrt(a)) / (1 - torch.sqrt(a))
++                logits = self.beta * delta_score
++                log_prob = torch.logaddexp(F.logsigmoid(logits), torch.log(a) + F.logsigmoid(-logits))
++                per_sequence_loss = -alpha * log_prob
++
+             else:
+                 raise ValueError(
+                     f"Unknown loss type: {loss_type}. Should be one of ['sigmoid', 'hinge', 'ipo', 'exo_pair', "
+                     "'nca_pair', 'robust', 'bco_pair', 'sppo_hard', 'aot', 'aot_unpaired', 'apo_zero', 'apo_down', "
+-                    "'discopop', 'sft', 'sigmoid_norm']"
++                    "'discopop', 'sft', 'sigmoid_norm', 'udpo']"
+                 )
+ 
+             if self.use_weighting:

@@ -1,0 +1,89 @@
+diff --git a/src/datasets/iterable_dataset.py b/src/datasets/iterable_dataset.py
+index f2318a12152..e649c6a0f12 100644
+--- a/src/datasets/iterable_dataset.py
++++ b/src/datasets/iterable_dataset.py
+@@ -201,6 +201,21 @@ def set_seed_recursively(ex_iterable):
+     return set_seed_recursively(ex_iterable)
+ 
+ 
++def _copy_ex_iterables_tree(ex_iterable: "_BaseExamplesIterable") -> "_BaseExamplesIterable":
++    """Shallow-copy every node of the ex_iterables tree.
++
++    Datasets derived from the same dataset (e.g. `ds.skip(n)` and `ds.take(n)`) share its ex_iterables.
++    `_init_state_dict()` replaces a node's state dict, so without a copy, preparing one of them for iteration
++    would detach the state dict that another one's running iterator is still updating.
++    """
++    ex_iterable = copy(ex_iterable)
++    if hasattr(ex_iterable, "ex_iterable"):
++        ex_iterable.ex_iterable = _copy_ex_iterables_tree(ex_iterable.ex_iterable)
++    if hasattr(ex_iterable, "ex_iterables"):
++        ex_iterable.ex_iterables = [_copy_ex_iterables_tree(ei) for ei in ex_iterable.ex_iterables]
++    return ex_iterable
++
++
+ _PRIMITIVE_TYPES = (int, float, bool, str, bytes, type(None))
+ 
+ 
+@@ -2958,7 +2973,10 @@ def _is_main_process(self):
+     def _prepare_ex_iterable_for_iteration(
+         self, batch_size: int = 1, drop_last_batch: bool = False
+     ) -> _BaseExamplesIterable:
+-        ex_iterable = self._ex_iterable
++        # Each iteration gets its own nodes, so it owns the state dicts it updates.
++        # shift_ex_examples_rngs() below copies the tree again, but only when epoch > 0:
++        # this copy is what protects epoch 0 (#8991), so keep it even though it is redundant there.
++        ex_iterable = _copy_ex_iterables_tree(self._ex_iterable)
+ 
+         if self.epoch:
+             try:
+diff --git a/tests/test_iterable_dataset.py b/tests/test_iterable_dataset.py
+index 37d15335e58..d5a351548fc 100644
+--- a/tests/test_iterable_dataset.py
++++ b/tests/test_iterable_dataset.py
+@@ -2746,6 +2746,46 @@ def test_iterable_dataset_set_epoch_resuming(dataset: IterableDataset):
+     assert len(list(dataset)) == 0
+ 
+ 
++def _generate_ids_by_shard(shards):
++    for shard in shards:
++        for i in range(4):
++            yield {"id": shard * 100 + i}
++
++
++@pytest.mark.parametrize("source_kind", ["python", "arrow"])
++@pytest.mark.parametrize("sibling_action", ["create", "iterate"])
++@pytest.mark.parametrize("resume_first", [False, True])
++def test_iterable_dataset_state_dict_not_frozen_by_sibling_dataset(source_kind, sibling_action, resume_first):
++    # `ds.skip()` and `ds.take()` share the ex_iterables of `ds`. Creating or iterating the take
++    # dataset must not freeze the state_dict of the skip dataset while it is being iterated,
++    # including when that iteration resumed from a checkpoint ("resume, then evaluate").
++    def make_source():
++        if source_kind == "python":
++            return IterableDataset.from_generator(_generate_ids_by_shard, gen_kwargs={"shards": list(range(4))})
++        ids = [shard * 100 + i for shard in range(4) for i in range(4)]
++        return Dataset.from_dict({"id": ids}).to_iterable_dataset(num_shards=4)
++
++    expected = [example["id"] for example in make_source().skip(2)]
++    ds = make_source()
++    train_ds = ds.skip(2)
++    seen = []
++    if resume_first:
++        before_restart = make_source().skip(2)
++        before_restart_iter = iter(before_restart)
++        seen = [next(before_restart_iter)["id"] for _ in range(2)]
++        train_ds.load_state_dict(before_restart.state_dict())
++    train_iter = iter(train_ds)
++    seen += [next(train_iter)["id"] for _ in range(2)]
++    eval_ds = ds.take(2)
++    if sibling_action == "iterate":
++        list(eval_ds)
++    seen += [next(train_iter)["id"] for _ in range(12 - len(seen))]  # crosses several shards
++
++    resumed = make_source().skip(2)
++    resumed.load_state_dict(train_ds.state_dict())
++    assert seen + [example["id"] for example in resumed] == expected
++
++
+ @pytest.mark.parametrize("method", ["skip", "take"])
+ @pytest.mark.parametrize("source_kind", ["python", "arrow"])
+ @pytest.mark.parametrize("shuffle_before", [False, True])

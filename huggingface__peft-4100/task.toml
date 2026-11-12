@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/huggingface__peft-4100"
+description = "FIX reduce_intruder_dimension for fan_in_fan_out and embedding LoRA layers"
+
+[metadata]
+difficulty = "large"
+category = "bugfix"
+keywords = [
+    "peft",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "huggingface/peft"
+ref = "d672982142a705f47696db2dd2218805517509cd"
+reference = "https://github.com/huggingface/peft/pull/4100"
+source_access = "auto"
+built_at = "2026-11-11T14:27:11.995038+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:0b2c13dcca345abc65ccbe9da16a1aedb63a1e3320b2e4bb150cf0ce4fcc105c"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-04T05:29:54Z"
+diff_format = "unified"
+context_files = [
+    "src/peft/tuners/lora/intruders.py",
+    "tests/test_lora_intruders.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 127
+difficulty = "large"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

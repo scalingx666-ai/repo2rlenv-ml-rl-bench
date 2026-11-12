@@ -1,0 +1,92 @@
+diff --git a/src/accelerate/utils/dataclasses.py b/src/accelerate/utils/dataclasses.py
+index d4af5067ff3..354e7227902 100644
+--- a/src/accelerate/utils/dataclasses.py
++++ b/src/accelerate/utils/dataclasses.py
+@@ -2143,15 +2143,11 @@ def set_mixed_precision(self, mixed_precision, buffer_autocast=False, override=F
+             dtype_args = {"param_dtype": dtype, "reduce_dtype": dtype}
+             if self.fsdp_version == 1:
+                 dtype_args["buffer_dtype"] = buffer_type
+-            else:
+-                dtype_args["output_dtype"] = dtype
+             # TODO(s1ro1): `cast_forward_inputs` for FSDP2?
+             self.mixed_precision_policy = MixedPrecision(**dtype_args)
+         elif isinstance(self.mixed_precision_policy, dict):
+             # Check for incompatible types
+-            valid_keys = ["param_dtype", "reduce_dtype"] + (
+-                ["buffer_dtype"] if self.fsdp_version == 1 else ["output_dtype"]
+-            )
++            valid_keys = ["param_dtype", "reduce_dtype"] + (["buffer_dtype"] if self.fsdp_version == 1 else [])
+             missing_keys = [k for k in valid_keys if k not in self.mixed_precision_policy]
+             invalid_values = [
+                 k for k, v in self.mixed_precision_policy.items() if v not in mixed_precision_mapping.values()
+diff --git a/tests/distributed/test_distributed_fsdp.py b/tests/distributed/test_distributed_fsdp.py
+index ac2fb0d9fdd..036fec94fd3 100644
+--- a/tests/distributed/test_distributed_fsdp.py
++++ b/tests/distributed/test_distributed_fsdp.py
+@@ -14,7 +14,7 @@
+ 
+ import os
+ 
+-from parameterized import param, parameterized
++from parameterized import parameterized
+ 
+ from accelerate.test_utils.testing import require_fsdp2, require_huggingface_suite, require_multi_gpu, slow
+ 
+@@ -33,13 +33,9 @@ class FSDP2TrainingTest(DistributedTrainingCommon):
+     def test_training(self, dtype):
+         self.check_training(dtype, config_file=FSDP2_CONFIG_FILE)
+ 
+-    # TODO: remove the tolerance once FSDP2 stops casting the model outputs to `mixed_precision` (`output_dtype`). The
+-    # cast rounds the loss, to steps of 0.0625 around 11.9 in bf16. In fp16, the gradient flowing back into the cast is
+-    # the gradient scaler's initial scale (65536), which overflows fp16 and skips the first step. The losses end up to
+-    # ~3e-2 from the reference.
+-    @parameterized.expand([param("fp16", atol=5e-2), param("bf16", atol=5e-2)])
+-    def test_training_mixed_precision(self, mixed_precision, **kwargs):
+-        self.check_mixed_precision(mixed_precision, config_file=FSDP2_CONFIG_FILE, **kwargs)
++    @parameterized.expand(["fp16", "bf16"])
++    def test_training_mixed_precision(self, mixed_precision):
++        self.check_mixed_precision(mixed_precision, config_file=FSDP2_CONFIG_FILE)
+ 
+     def test_training_with_gradient_accumulation(self):
+         self.check_gradient_accumulation(config_file=FSDP2_CONFIG_FILE)
+diff --git a/tests/fsdp/test_fsdp.py b/tests/fsdp/test_fsdp.py
+index 2f10484d67c..f3dd39c77f1 100644
+--- a/tests/fsdp/test_fsdp.py
++++ b/tests/fsdp/test_fsdp.py
+@@ -409,7 +409,8 @@ def test_auto_wrap_policy_skips_absent_no_split_modules(self):
+             fsdp_plugin = FullyShardedDataParallelPlugin(auto_wrap_policy="TRANSFORMER_BASED_WRAP")
+         if self.current_fsdp_version == 1:
+             fsdp_plugin.set_auto_wrap_policy(model)
+-            assert fsdp_plugin.transformer_cls_names_to_wrap == ["EsmLayer", "EsmEmbeddings"]
++            # Transformers stores `_no_split_modules` as a set, so the order changes between runs
++            assert sorted(fsdp_plugin.transformer_cls_names_to_wrap) == ["EsmEmbeddings", "EsmLayer"]
+         else:
+             policy = fsdp2_prepare_auto_wrap_policy(fsdp_plugin, model)
+             assert policy(model.encoder.layer[0])
+@@ -427,14 +428,15 @@ def test_mixed_precision(self):
+         for mp_dtype in dtypes:
+             env = self.fsdp_envs[fsdp_version].copy()
+             env["ACCELERATE_MIXED_PRECISION"] = mp_dtype
+-            extra_arg = "buffer_dtype" if fsdp_version == 1 else "output_dtype"
+             with patch_environment(**env):
+                 accelerator = Accelerator()
+                 if mp_dtype == "fp16":
+                     dtype = torch.float16
+                 elif mp_dtype == "bf16":
+                     dtype = torch.bfloat16
+-                mp_policy = MP(param_dtype=dtype, reduce_dtype=dtype, **{extra_arg: dtype})
++                # FSDP2 leaves `output_dtype` unset, so the outputs keep the dtype they were computed in.
++                extra_args = {"buffer_dtype": dtype} if fsdp_version == 1 else {}
++                mp_policy = MP(param_dtype=dtype, reduce_dtype=dtype, **extra_args)
+                 assert accelerator.state.fsdp_plugin.mixed_precision_policy == mp_policy
+                 if mp_dtype == FP16:
+                     assert isinstance(accelerator.scaler, Scaler)
+@@ -448,7 +450,7 @@ def test_mixed_precision(self):
+                 assert plugin.mixed_precision_policy == mp_policy
+             with patch_environment(**env):
+                 plugin = FullyShardedDataParallelPlugin(
+-                    mixed_precision_policy={"param_dtype": dtype, "reduce_dtype": dtype, extra_arg: dtype}
++                    mixed_precision_policy={"param_dtype": dtype, "reduce_dtype": dtype, **extra_args}
+                 )
+                 assert plugin.mixed_precision_policy == mp_policy
+             with patch_environment(**env):

@@ -1,0 +1,62 @@
+version = "1.0"
+
+[task]
+name = "default/huggingface__trl-8200"
+description = "Make the tiny Gemma2 model Flash Attention compatible with head_dim=8"
+
+[metadata]
+difficulty = "easy"
+category = "bugfix"
+keywords = [
+    "trl",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "huggingface/trl"
+ref = "d9caf95c1f6a99bcefbb3662dbaf7e3a74a87f03"
+reference = "https://github.com/huggingface/trl/pull/8200"
+source_access = "auto"
+built_at = "2026-11-11T14:23:51.922238+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:16fd2f78ddef4439b6a510f013d5e486025dd3a0b0995613d63893f39ec67b9c"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-09T16:54:25Z"
+diff_format = "unified"
+context_files = [
+    "scripts/generate_tiny_models/for_causal_lm/gemma2_for_causal_lm.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 4
+difficulty = "trivial"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

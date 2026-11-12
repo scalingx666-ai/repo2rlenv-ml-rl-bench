@@ -1,0 +1,184 @@
+diff --git a/docs/source/developer_guides/troubleshooting.md b/docs/source/developer_guides/troubleshooting.md
+index 8a19bc2c67..8346946d5e 100644
+--- a/docs/source/developer_guides/troubleshooting.md
++++ b/docs/source/developer_guides/troubleshooting.md
+@@ -220,6 +220,8 @@ You should probably TRAIN this model on a down-stream task to be able to use it
+ 
+ The mentioned layers should be added to `modules_to_save` in the config to avoid the described problem.
+ 
++[`~peft.PeftModel.healthcheck`] reports a `TASK_HEAD_NOT_SAVED` warning for the most common form of this mistake: a sequence classification, token classification or question answering head that was newly initialized when loading the base model but is not in `modules_to_save`, e.g. because `task_type` was not set. The check is skipped if the base model does not list its architectures in the config.
++
+ > [!TIP]
+ > As an example, when loading a model that is using the DeBERTa architecture for sequence classification, you'll see a warning that the following weights are newly initialized: `['classifier.bias', 'classifier.weight', 'pooler.dense.bias', 'pooler.dense.weight']`. From this, it follows that the `classifier` and `pooler` layers should be added to: `modules_to_save=["classifier", "pooler"]`.
+ 
+diff --git a/src/peft/utils/healthcheck.py b/src/peft/utils/healthcheck.py
+index ba3ee44d16..587fb0a3a8 100644
+--- a/src/peft/utils/healthcheck.py
++++ b/src/peft/utils/healthcheck.py
+@@ -21,11 +21,15 @@
+ import transformers
+ 
+ from .. import __version__
+-from ..peft_model import get_layer_status, get_model_status
++from ..peft_model import CLASSIFIER_MODULE_NAMES, get_layer_status, get_model_status
++from .other import ModulesToSaveWrapper
+ 
+ 
+ SEVERITY = Literal["warning", "error"]
+ 
++_TASK_HEAD_CLASS_SUFFIXES = ("ForSequenceClassification", "ForTokenClassification", "ForQuestionAnswering")
++_TASK_HEAD_MODULE_NAMES = (*CLASSIFIER_MODULE_NAMES, "qa_outputs")
++
+ 
+ def _format_finding(code: str, severity: SEVERITY, message: str) -> dict[str, str]:
+     return {"code": code, "severity": severity, "message": message}
+@@ -93,16 +97,42 @@ def _get_model_runtime(model) -> dict[str, Any]:
+     }
+ 
+ 
++def _find_unsaved_new_task_heads(model) -> list[str]:
++    """
++    Return the names of task heads that were newly initialized when loading the base model but are not saved.
++
++    A head counts as newly initialized if the base model class is a Transformers head class (e.g.
++    `XForSequenceClassification`) that is not listed in `config.architectures`, i.e. the checkpoint did not contain
++    this head. It counts as saved if it is wrapped by `ModulesToSaveWrapper`. If `architectures` is not available,
++    nothing is reported.
++    """
++    base_model = model.get_base_model() if hasattr(model, "get_base_model") else model
++    class_name = type(base_model).__name__
++    if not class_name.endswith(_TASK_HEAD_CLASS_SUFFIXES):
++        return []
++
++    architectures = getattr(getattr(base_model, "config", None), "architectures", None)
++    if not architectures or class_name in architectures:
++        return []
++
++    return [
++        name
++        for name, child in base_model.named_children()
++        if name in _TASK_HEAD_MODULE_NAMES and not isinstance(child, ModulesToSaveWrapper)
++    ]
++
++
+ def run_healthcheck(model, min_trainable_params: int = 1, max_trainable_params_percent: int = 50) -> dict[str, Any]:
+     """
+     Inspect a PEFT model for states that are suspicious before training.
+ 
+     This function summarizes the model and layer status APIs (see [~`PeftModel.get_model_status`] and
+     [~`PeftModel.get_layer_status`]), and includes findings for inconsistent adapter state, merged adapters, and
+-    implausible numbers of trainable parameters. It does not validate the training loop, optimizer, or dataset. A
+-    status will be reported as `"irregular"` if inconsistencies are found in the model, e.g. when for the same adapter,
+-    some layers are enabled and some layers are disabled. This almost always means that something went wrong and that
+-    you should check that you didn't accidentally change some attributes on the model incorrectly.
++    implausible numbers of trainable parameters, and for newly initialized task heads that are not saved with the
++    adapter. It does not validate the training loop, optimizer, or dataset. A status will be reported as `"irregular"`
++    if inconsistencies are found in the model, e.g. when for the same adapter, some layers are enabled and some layers
++    are disabled. This almost always means that something went wrong and that you should check that you didn't
++    accidentally change some attributes on the model incorrectly.
+ 
+     If the check found something suspicious, it will be reported in the `"findings"` field. An empty `"findings""` list
+     means that no suspicious adapter state was detected, not that a training run is guaranteed to succeed.
+@@ -213,6 +243,21 @@ def run_healthcheck(model, min_trainable_params: int = 1, max_trainable_params_p
+                 )
+             )
+ 
++    unsaved_heads = _find_unsaved_new_task_heads(model)
++    if unsaved_heads:
++        head_names = ", ".join(f"'{name}'" for name in unsaved_heads)
++        findings.append(
++            _format_finding(
++                "TASK_HEAD_NOT_SAVED",
++                "warning",
++                (
++                    f"The task head {head_names} was newly initialized when the base model was loaded but is not in "
++                    "`modules_to_save`, so it is not saved with the adapter. Loading the adapter later gives a "
++                    "different random head. Set `task_type` in the PEFT config or add the head to `modules_to_save`."
++                ),
++            )
++        )
++
+     layer_types_per_adapter = {}
+     for adapter_name in model_status.available_adapters:
+         layer_types = Counter(
+diff --git a/tests/test_tuners_utils.py b/tests/test_tuners_utils.py
+index 351ddecde5..241e096224 100644
+--- a/tests/test_tuners_utils.py
++++ b/tests/test_tuners_utils.py
+@@ -30,6 +30,8 @@
+     AutoModelForSeq2SeqLM,
+     AutoModelForSequenceClassification,
+     BitsAndBytesConfig,
++    GPT2Config,
++    GPT2ForSequenceClassification,
+ )
+ from transformers.pytorch_utils import Conv1D
+ 
+@@ -1998,6 +2000,67 @@ def test_healthcheck_transformers_model_injected_directly(self):
+             assert healthcheck["model_runtime"]["parameter_devices"] == ["cpu"]
+             assert healthcheck["findings"] == []
+ 
++    # randomly initialized classifier head, since the checkpoint is a causal LM
++    _TASK_HEAD_MODEL_ID = "peft-internal-testing/tiny-random-OPTForCausalLM"
++
++    def _get_model_with_new_task_head(self):
++        with hub_online_once(self._TASK_HEAD_MODEL_ID):
++            return AutoModelForSequenceClassification.from_pretrained(self._TASK_HEAD_MODEL_ID, num_labels=3)
++
++    @staticmethod
++    def finding_codes(model):
++        return {finding["code"] for finding in model.healthcheck()["findings"]}
++
++    def test_new_task_head_without_task_type_is_flagged(self):
++        model = get_peft_model(self._get_model_with_new_task_head(), LoraConfig(target_modules=["q_proj"], r=2))
++
++        model.print_healthcheck()  # does not raise
++        healthcheck = model.healthcheck()
++
++        assert healthcheck["is_ready"] is True  # warning only
++        assert [finding["code"] for finding in healthcheck["findings"]] == ["TASK_HEAD_NOT_SAVED"]
++        assert healthcheck["findings"][0]["severity"] == "warning"
++        assert "'score'" in healthcheck["findings"][0]["message"]
++
++    def test_new_task_head_targeted_by_adapter_is_flagged(self):
++        # only the LoRA weights of the head are saved, not the random base weight
++        config = LoraConfig(target_modules=["q_proj", "score"], r=2)
++        model = get_peft_model(self._get_model_with_new_task_head(), config)
++
++        assert self.finding_codes(model) == {"TASK_HEAD_NOT_SAVED"}
++
++    def test_new_task_head_with_task_type_is_not_flagged(self):
++        config = LoraConfig(target_modules=["q_proj"], r=2, task_type="SEQ_CLS")
++        model = get_peft_model(self._get_model_with_new_task_head(), config)
++
++        assert self.finding_codes(model) == set()
++
++    def test_new_task_head_in_modules_to_save_is_not_flagged(self):
++        config = LoraConfig(target_modules=["q_proj"], r=2, modules_to_save=["score"])
++        model = get_peft_model(self._get_model_with_new_task_head(), config)
++
++        assert self.finding_codes(model) == set()
++
++    def test_pretrained_task_head_is_not_flagged(self):
++        # a classifier checkpoint lists the classification class in `architectures`
++        model_id = "peft-internal-testing/tiny-random-BertForSequenceClassification"
++        with hub_online_once(model_id):
++            base = AutoModelForSequenceClassification.from_pretrained(model_id)
++        assert base.config.architectures == ["BertForSequenceClassification"]
++        model = get_peft_model(base, LoraConfig(target_modules=["query"], r=2))
++
++        assert self.finding_codes(model) == set()
++
++    def test_task_head_without_architectures_is_not_flagged(self):
++        config = GPT2Config(
++            n_layer=1, n_embd=16, n_head=2, vocab_size=50, n_positions=16, pad_token_id=0, num_labels=3
++        )
++        base = GPT2ForSequenceClassification(config)  # created from a config, there is no checkpoint
++        assert not base.config.architectures
++        model = get_peft_model(base, LoraConfig(target_modules=["c_attn"], fan_in_fan_out=True, r=2))
++
++        assert self.finding_codes(model) == set()
++
+ 
+ # Tests for BaseTuner
+ class MockModelConfig:

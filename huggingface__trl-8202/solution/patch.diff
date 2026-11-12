@@ -1,0 +1,86 @@
+diff --git a/docs/source/distillation_trainer.md b/docs/source/distillation_trainer.md
+index 4ba1255b612..e0d940e94d1 100644
+--- a/docs/source/distillation_trainer.md
++++ b/docs/source/distillation_trainer.md
+@@ -199,7 +199,7 @@ For more details, see the [Passing tools guide](https://huggingface.co/docs/tran
+ > [!TIP]
+ > The tool call loop requires the chat template to be *prefix-preserving* (appending a tool message must not change how earlier messages are rendered). For known model families (e.g. Qwen3, DeepSeek-V3), TRL automatically swaps in a patched training template when tools are enabled. See [Chat Templates](chat_templates#training-templates) for the full list.
+ 
+-Use `max_tool_calling_iterations` in the [`DistillationConfig`] to cap the number of tool-calling turns. By default there is no limit, and generation stops when the student produces a response turn with no tool calls.
++Use `max_tool_calling_iterations` in the [`DistillationConfig`] to cap the number of tool-calling turns. By default there is no limit, and generation stops when the student produces a response turn with no tool calls, when the completion (all turns and tool results) reaches `max_completion_length` tokens, or when the full sequence reaches the model's maximum length (`vllm_max_model_length` with `vllm_mode="colocate"`, the model's `max_position_embeddings` otherwise).
+ 
+ Example:
+ 
+diff --git a/docs/source/grpo_trainer.md b/docs/source/grpo_trainer.md
+index 33659fc86e8..d631927ec0d 100644
+--- a/docs/source/grpo_trainer.md
++++ b/docs/source/grpo_trainer.md
+@@ -731,7 +731,7 @@ For more details, see the [Passing tools guide](https://huggingface.co/docs/tran
+ > [!TIP]
+ > The GRPO tool call loop requires the chat template to be *prefix-preserving* (appending a tool message must not change how earlier messages are rendered). For known model families (e.g. Qwen3, DeepSeek-V3), TRL automatically swaps in a patched training template when tools are enabled. See [Chat Templates](chat_templates#training-templates) for the full list.
+ 
+-Use `max_tool_calling_iterations` in the [`GRPOConfig`] to cap the number of tool-calling turns. By default there is no limit, and generation stops when the model produces a response turn with no tool calls.
++Use `max_tool_calling_iterations` in the [`GRPOConfig`] to cap the number of tool-calling turns. By default there is no limit, and generation stops when the model produces a response turn with no tool calls, when the completion (all turns and tool results) reaches `max_completion_length` tokens, or when the full sequence reaches the model's maximum length (`vllm_max_model_length` with `vllm_mode="colocate"`, the model's `max_position_embeddings` otherwise).
+ 
+ Example:
+ 
+diff --git a/trl/trainer/distillation_config.py b/trl/trainer/distillation_config.py
+index 59e55fbf6b5..837738b3d82 100644
+--- a/trl/trainer/distillation_config.py
++++ b/trl/trainer/distillation_config.py
+@@ -138,8 +138,10 @@ class DistillationConfig(_BaseConfig):
+             divergence itself; there is no reference-model KL penalty.
+         max_tool_calling_iterations (`int`, *optional*):
+             Maximum number of tool-calling turns when training an agent. If `None`, there is no limit and generation
+-            stops when the model generates a response turn with no tool calls or when the total response length reaches
+-            `max_model_length`.
++            stops when the model generates a response turn with no tool calls, when the completion (all turns and tool
++            results) reaches `max_completion_length` tokens, or when the full sequence reaches the model's maximum
++            length (`vllm_max_model_length` with `vllm_mode="colocate"`, the model's `max_position_embeddings`
++            otherwise).
+ 
+         > Parameters that control the logging
+ 
+@@ -368,8 +370,10 @@ class DistillationConfig(_BaseConfig):
+         default=None,
+         metadata={
+             "help": "Maximum number of tool-calling turns when training an agent. If `None`, there is no limit and "
+-            "generation stops when the model generates a response turn with no tool calls or when the total "
+-            "response length reaches `max_model_length`."
++            "generation stops when the model generates a response turn with no tool calls, when the completion "
++            "(all turns and tool results) reaches `max_completion_length` tokens, or when the full sequence reaches "
++            "the model's maximum length (`vllm_max_model_length` with `vllm_mode=\"colocate\"`, the model's "
++            "`max_position_embeddings` otherwise)."
+         },
+     )
+ 
+diff --git a/trl/trainer/grpo_config.py b/trl/trainer/grpo_config.py
+index aa2047e6e3a..308b18d3d62 100644
+--- a/trl/trainer/grpo_config.py
++++ b/trl/trainer/grpo_config.py
+@@ -317,8 +317,10 @@ class GRPOConfig(_BaseConfig):
+             (and account for the token subset when using `top_entropy_quantile`).
+         max_tool_calling_iterations (`int`, *optional*):
+             Maximum number of tool-calling turns when training an agent. If `None`, there is no limit and generation
+-            stops when the model generates a response turn with no tool calls or when the total response length reaches
+-            `max_model_length`.
++            stops when the model generates a response turn with no tool calls, when the completion (all turns and tool
++            results) reaches `max_completion_length` tokens, or when the full sequence reaches the model's maximum
++            length (`vllm_max_model_length` with `vllm_mode="colocate"`, the model's `max_position_embeddings`
++            otherwise).
+         vllm_importance_sampling_correction (`bool`, *optional*, defaults to `True`):
+             Whether to apply Importance Sampling (IS) to correct for the mismatch between vLLM completion logprobs and
+             recomputed training logprobs. If set to `False`, no IS is applied regardless of
+@@ -921,8 +923,10 @@ class GRPOConfig(_BaseConfig):
+         default=None,
+         metadata={
+             "help": "Maximum number of tool-calling turns when training an agent. If `None`, there is no limit and "
+-            "generation stops when the model generates a response turn with no tool calls or when the total "
+-            "response length reaches `max_model_length`."
++            "generation stops when the model generates a response turn with no tool calls, when the completion "
++            "(all turns and tool results) reaches `max_completion_length` tokens, or when the full sequence reaches "
++            "the model's maximum length (`vllm_max_model_length` with `vllm_mode=\"colocate\"`, the model's "
++            "`max_position_embeddings` otherwise)."
+         },
+     )
+     vllm_importance_sampling_correction: bool = field(

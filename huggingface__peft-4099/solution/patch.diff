@@ -1,0 +1,66 @@
+diff --git a/src/peft/utils/other.py b/src/peft/utils/other.py
+index 1d70f8546d..2d18ff44be 100644
+--- a/src/peft/utils/other.py
++++ b/src/peft/utils/other.py
+@@ -154,6 +154,10 @@ def infer_device() -> str:
+         return "xpu"
+     elif is_npu_available():
+         return "npu"
++    elif hasattr(torch, "accelerator") and torch.accelerator.is_available():
++        accelerator = torch.accelerator.current_accelerator()
++        if accelerator is not None:
++            return accelerator.type
+     return "cpu"
+ 
+ 
+diff --git a/tests/test_other.py b/tests/test_other.py
+index c1a53d2408..6eb24bf74f 100644
+--- a/tests/test_other.py
++++ b/tests/test_other.py
+@@ -14,6 +14,7 @@
+ 
+ import copy
+ from contextlib import contextmanager
++from types import SimpleNamespace
+ from unittest.mock import patch
+ 
+ import pytest
+@@ -45,6 +46,7 @@
+     ModulesToSaveWrapper,
+     _get_module_names_tied_with_embedding,
+     _get_no_split_modules,
++    infer_device,
+     prepare_model_for_kbit_training,
+ )
+ 
+@@ -1173,3 +1175,30 @@ def test_reusing_config_in_add_adapter(self, task_type, auto_cls, head_names):
+ 
+         assert user_list == ["my_head"]
+         assert model.peft_config["other"].modules_to_save == ["my_head"] + head_names
++
++
++class TestInferDevice:
++    """Verify `infer_device` checks `torch.accelerator` backends (such as `torch_tpu`) before CPU fallback."""
++
++    def test_infer_device_torch_accelerator_tpu(self, monkeypatch):
++        monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
++        if hasattr(torch.backends, "mps"):
++            monkeypatch.setattr(torch.backends.mps, "is_available", lambda: False)
++        monkeypatch.setattr("peft.utils.other.mlu_available", False)
++        monkeypatch.setattr("peft.utils.other.is_xpu_available", lambda: False)
++        monkeypatch.setattr("peft.utils.other.is_npu_available", lambda: False)
++
++        class _FakeAccelerator:
++            @staticmethod
++            def is_available():
++                return True
++
++            @staticmethod
++            def current_accelerator():
++                return SimpleNamespace(type="tpu")
++
++        monkeypatch.setattr(torch, "accelerator", _FakeAccelerator, raising=False)
++        assert infer_device() == "tpu"
++
++        monkeypatch.setattr(_FakeAccelerator, "is_available", staticmethod(lambda: False))
++        assert infer_device() == "cpu"

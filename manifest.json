@@ -1,0 +1,610 @@
+{
+  "dataset": "repo2rlenv-ml-rl-bench",
+  "generator": "HuggingFace Repo2RLEnv 0.9.6",
+  "pipeline": "pr_diff",
+  "task_count": 54,
+  "source_repos": {
+    "huggingface/accelerate": 10,
+    "huggingface/datasets": 14,
+    "huggingface/diffusers": 3,
+    "huggingface/peft": 9,
+    "huggingface/transformers": 6,
+    "huggingface/trl": 12
+  },
+  "tasks": [
+    {
+      "name": "default/huggingface__accelerate-4352",
+      "description": "Fix loading checkpoints with modules offloaded to disk",
+      "repo": "huggingface/accelerate",
+      "reference": "https://github.com/huggingface/accelerate/pull/4352",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__accelerate-4354",
+      "description": "Fix wait_for_everyone() crashing on MULTI_CPU when the machine has an accelerator",
+      "repo": "huggingface/accelerate",
+      "reference": "https://github.com/huggingface/accelerate/pull/4354",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__accelerate-4366",
+      "description": "chore(deps): bump the actions group with 4 updates",
+      "repo": "huggingface/accelerate",
+      "reference": "https://github.com/huggingface/accelerate/pull/4366",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__accelerate-4368",
+      "description": "Bump doc-builder workflow pin",
+      "repo": "huggingface/accelerate",
+      "reference": "https://github.com/huggingface/accelerate/pull/4368",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__accelerate-4369",
+      "description": "FSDP2: don't upcast placeholder weights on non-main ranks with cpu_ram_efficient_loading",
+      "repo": "huggingface/accelerate",
+      "reference": "https://github.com/huggingface/accelerate/pull/4369",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__accelerate-4384",
+      "description": "Skip `_no_split_modules` classes the model doesn't contain when auto-wrapping",
+      "repo": "huggingface/accelerate",
+      "reference": "https://github.com/huggingface/accelerate/pull/4384",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__accelerate-4386",
+      "description": "Allow clip_grad_value_ under FSDP2",
+      "repo": "huggingface/accelerate",
+      "reference": "https://github.com/huggingface/accelerate/pull/4386",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__accelerate-4403",
+      "description": "Fsdp2 keep output dtype",
+      "repo": "huggingface/accelerate",
+      "reference": "https://github.com/huggingface/accelerate/pull/4403",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__accelerate-4406",
+      "description": "Preserve zero gradient clipping in DeepSpeed configuration",
+      "repo": "huggingface/accelerate",
+      "reference": "https://github.com/huggingface/accelerate/pull/4406",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__accelerate-4472",
+      "description": "Bump doc-builder to get the docs machine-translated",
+      "repo": "huggingface/accelerate",
+      "reference": "https://github.com/huggingface/accelerate/pull/4472",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__datasets-8840",
+      "description": "Fix indices buffer loading in Dataset.from_buffer",
+      "repo": "huggingface/datasets",
+      "reference": "https://github.com/huggingface/datasets/pull/8840",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__datasets-8855",
+      "description": "Preserve active iterators when reconfiguring threaded decoding",
+      "repo": "huggingface/datasets",
+      "reference": "https://github.com/huggingface/datasets/pull/8855",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__datasets-8856",
+      "description": "Reject duplicate WebDataset fields instead of silently overwriting data",
+      "repo": "huggingface/datasets",
+      "reference": "https://github.com/huggingface/datasets/pull/8856",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__datasets-8865",
+      "description": "Fix concatenation cache fingerprints for different axes",
+      "repo": "huggingface/datasets",
+      "reference": "https://github.com/huggingface/datasets/pull/8865",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__datasets-8869",
+      "description": "Unescape doubled quotes in GenBank qualifier values",
+      "repo": "huggingface/datasets",
+      "reference": "https://github.com/huggingface/datasets/pull/8869",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__datasets-8879",
+      "description": "Fix pickle RCE in pandas dataset builder (CVE-2026-57845)",
+      "repo": "huggingface/datasets",
+      "reference": "https://github.com/huggingface/datasets/pull/8879",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__datasets-8896",
+      "description": "Fix batched map on a dataset with an index when the function returns a table",
+      "repo": "huggingface/datasets",
+      "reference": "https://github.com/huggingface/datasets/pull/8896",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__datasets-8905",
+      "description": "Bump doc-builder to get the docs machine-translated",
+      "repo": "huggingface/datasets",
+      "reference": "https://github.com/huggingface/datasets/pull/8905",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__datasets-8958",
+      "description": "fix(mesh): accept .gltf in the Mesh feature and the meshfolder builder",
+      "repo": "huggingface/datasets",
+      "reference": "https://github.com/huggingface/datasets/pull/8958",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__datasets-8960",
+      "description": "Fix batch(by_column=) default accumulation causing full downloads",
+      "repo": "huggingface/datasets",
+      "reference": "https://github.com/huggingface/datasets/pull/8960",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__datasets-8966",
+      "description": "Fix batch(by_column=) merging groups that are separated by null values",
+      "repo": "huggingface/datasets",
+      "reference": "https://github.com/huggingface/datasets/pull/8966",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__datasets-8976",
+      "description": "Fix mixed-type JSON fields with slashes in their names",
+      "repo": "huggingface/datasets",
+      "reference": "https://github.com/huggingface/datasets/pull/8976",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__datasets-8977",
+      "description": "Fix IterableDataset.rename_columns with arrow, pandas and polars formats",
+      "repo": "huggingface/datasets",
+      "reference": "https://github.com/huggingface/datasets/pull/8977",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__datasets-8992",
+      "description": "Fix IterableDataset state_dict freezing when a sibling dataset is created",
+      "repo": "huggingface/datasets",
+      "reference": "https://github.com/huggingface/datasets/pull/8992",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__diffusers-15201",
+      "description": "Pin hf-doc-builder to 0.6.0",
+      "repo": "huggingface/diffusers",
+      "reference": "https://github.com/huggingface/diffusers/pull/15201",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__diffusers-15212",
+      "description": "Reset stateful cache hooks after every ModularPipeline call",
+      "repo": "huggingface/diffusers",
+      "reference": "https://github.com/huggingface/diffusers/pull/15212",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__diffusers-15223",
+      "description": "Bump doc-builder to render math in docstring descriptions",
+      "repo": "huggingface/diffusers",
+      "reference": "https://github.com/huggingface/diffusers/pull/15223",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__peft-4072",
+      "description": "Bump doc-builder to get the docs machine-translated",
+      "repo": "huggingface/peft",
+      "reference": "https://github.com/huggingface/peft/pull/4072",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__peft-4081",
+      "description": "ENH: Svd lowrank option for lora intruder dimension reduction",
+      "repo": "huggingface/peft",
+      "reference": "https://github.com/huggingface/peft/pull/4081",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__peft-4084",
+      "description": "FIX AdaLoRA Conv2d with groups and padding_mode",
+      "repo": "huggingface/peft",
+      "reference": "https://github.com/huggingface/peft/pull/4084",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__peft-4085",
+      "description": "Fix modules_to_save selection when merging an inactive adapter",
+      "repo": "huggingface/peft",
+      "reference": "https://github.com/huggingface/peft/pull/4085",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__peft-4089",
+      "description": "FEAT healthcheck: warn when a randomly initialized task head is not saved",
+      "repo": "huggingface/peft",
+      "reference": "https://github.com/huggingface/peft/pull/4089",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__peft-4091",
+      "description": "DOC Fix docstring examples of LoHa, LoKr, OFT, MiSS and HRA",
+      "repo": "huggingface/peft",
+      "reference": "https://github.com/huggingface/peft/pull/4091",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__peft-4099",
+      "description": "[Fixes #4101] Support `torch.accelerator` backends (e.g. `torch_tpu`) in `infer_device()`",
+      "repo": "huggingface/peft",
+      "reference": "https://github.com/huggingface/peft/pull/4099",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__peft-4100",
+      "description": "FIX reduce_intruder_dimension for fan_in_fan_out and embedding LoRA layers",
+      "repo": "huggingface/peft",
+      "reference": "https://github.com/huggingface/peft/pull/4100",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__peft-4136",
+      "description": "CI: Better slow test report",
+      "repo": "huggingface/peft",
+      "reference": "https://github.com/huggingface/peft/pull/4136",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__transformers-50532",
+      "description": "Speed up `bad_words_ids` and `sequence_bias` by matching multi-token sequences in one pass",
+      "repo": "huggingface/transformers",
+      "reference": "https://github.com/huggingface/transformers/pull/50532",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__transformers-50547",
+      "description": "Fix Step3.7 vision RoPE spatial W/H axis order",
+      "repo": "huggingface/transformers",
+      "reference": "https://github.com/huggingface/transformers/pull/50547",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__transformers-50550",
+      "description": "Bump doc-builder",
+      "repo": "huggingface/transformers",
+      "reference": "https://github.com/huggingface/transformers/pull/50550",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__transformers-50577",
+      "description": "Fix RecurrentGemma padded generation by declaring its `layer_types`",
+      "repo": "huggingface/transformers",
+      "reference": "https://github.com/huggingface/transformers/pull/50577",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__transformers-50582",
+      "description": "fix(pipelines): respect problem_type in image and video classification pipelines",
+      "repo": "huggingface/transformers",
+      "reference": "https://github.com/huggingface/transformers/pull/50582",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__transformers-50583",
+      "description": "Support Enum in get_json_schema, raise on custom classes",
+      "repo": "huggingface/transformers",
+      "reference": "https://github.com/huggingface/transformers/pull/50583",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__trl-8200",
+      "description": "Make the tiny Gemma2 model Flash Attention compatible with head_dim=8",
+      "repo": "huggingface/trl",
+      "reference": "https://github.com/huggingface/trl/pull/8200",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__trl-8202",
+      "description": "Fix the max_tool_calling_iterations docstring",
+      "repo": "huggingface/trl",
+      "reference": "https://github.com/huggingface/trl/pull/8202",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__trl-8204",
+      "description": "Raise a TypeError for an unsupported AsyncGRPO train_dataset",
+      "repo": "huggingface/trl",
+      "reference": "https://github.com/huggingface/trl/pull/8204",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__trl-8205",
+      "description": "Check the AsyncGRPO reward count and warn when every reward is None",
+      "repo": "huggingface/trl",
+      "reference": "https://github.com/huggingface/trl/pull/8205",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__trl-8206",
+      "description": "Check the tool requirements at AsyncGRPO init",
+      "repo": "huggingface/trl",
+      "reference": "https://github.com/huggingface/trl/pull/8206",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__trl-8207",
+      "description": "Fix a passed PeftModel and refuse prompt-learning adapters in AsyncGRPO",
+      "repo": "huggingface/trl",
+      "reference": "https://github.com/huggingface/trl/pull/8207",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__trl-8208",
+      "description": "Refuse image datasets in AsyncGRPO, which trains on text only",
+      "repo": "huggingface/trl",
+      "reference": "https://github.com/huggingface/trl/pull/8208",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__trl-8209",
+      "description": "Tag the model in AsyncGRPO",
+      "repo": "huggingface/trl",
+      "reference": "https://github.com/huggingface/trl/pull/8209",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__trl-8211",
+      "description": "Add UDPO loss for noisy preferences to DPOTrainer",
+      "repo": "huggingface/trl",
+      "reference": "https://github.com/huggingface/trl/pull/8211",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__trl-8243",
+      "description": "Publish the new token allowance at the end of each step",
+      "repo": "huggingface/trl",
+      "reference": "https://github.com/huggingface/trl/pull/8243",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__trl-8245",
+      "description": "Remove `adjusted_mfu`, which nothing calls",
+      "repo": "huggingface/trl",
+      "reference": "https://github.com/huggingface/trl/pull/8245",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    },
+    {
+      "name": "default/huggingface__trl-8249",
+      "description": "Raise at AsyncGRPO init when there is no reward source",
+      "repo": "huggingface/trl",
+      "reference": "https://github.com/huggingface/trl/pull/8249",
+      "pipeline": "pr_diff",
+      "reward_kinds": [
+        "diff_similarity"
+      ],
+      "evaluation_status": "unverified"
+    }
+  ]
+}

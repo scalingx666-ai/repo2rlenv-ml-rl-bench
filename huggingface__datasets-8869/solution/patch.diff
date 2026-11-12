@@ -1,0 +1,95 @@
+diff --git a/src/datasets/packaged_modules/genbank/genbank.py b/src/datasets/packaged_modules/genbank/genbank.py
+index e508e57d08d..8668d225c3d 100644
+--- a/src/datasets/packaged_modules/genbank/genbank.py
++++ b/src/datasets/packaged_modules/genbank/genbank.py
+@@ -60,6 +60,7 @@ def __init__(self, location_parser: Callable[[str], dict]) -> None:
+         self._qualifier_seen = False
+         self._qualifier_key: Optional[str] = None
+         self._qualifier_value: list[str] = []
++        self._quoted = False
+         self._quote_open = False
+ 
+     @property
+@@ -90,9 +91,12 @@ def _commit_qualifier(self) -> None:
+         if self._feature is not None and self._qualifier_key is not None:
+             values = self._feature["qualifiers"].setdefault(self._qualifier_key, [])
+             spacer = "" if self._qualifier_key in self.SPACELESS_QUALIFIERS else " "
+-            values.append(spacer.join(self._qualifier_value))
++            value = spacer.join(self._qualifier_value)
++            # The feature table escapes a quotation mark inside a quoted value as "".
++            values.append(value.replace('""', '"') if self._quoted else value)
+         self._qualifier_key = None
+         self._qualifier_value = []
++        self._quoted = False
+         self._quote_open = False
+ 
+     def finalize_feature(self) -> None:
+@@ -130,18 +134,27 @@ def begin_qualifier(self, key: str, value: str) -> None:
+         self._qualifier_seen = True
+         self._qualifier_key = key
+         if value.startswith('"'):
+-            value = value[1:]
+-            self._quote_open = not value.endswith('"')
+-            value = value[:-1] if not self._quote_open else value
++            self._quoted = self._quote_open = True
++            value = self._close_quote(value[1:])
+         self._qualifier_value = [value]
+ 
+     def add_continuation(self, text: str) -> None:
+         """Append a continuation line to the qualifier currently being read."""
+-        if self._quote_open and text.endswith('"'):
+-            text = text[:-1]
+-            self._quote_open = False
++        if self._quote_open:
++            text = self._close_quote(text)
+         self._qualifier_value.append(text)
+ 
++    def _close_quote(self, text: str) -> str:
++        """Drop the closing quote of the open value if ``text`` ends with it.
++
++        Inside a quoted value a quotation mark is written as ``""``, so a line that
++        ends in an even run of marks ends in escapes and the value stays open.
++        """
++        if (len(text) - len(text.rstrip('"'))) % 2 == 1:
++            self._quote_open = False
++            return text[:-1]
++        return text
++
+     @property
+     def has_open_quote(self) -> bool:
+         """Whether the current qualifier's quoted value has not been closed yet."""
+diff --git a/tests/packaged_modules/test_genbank.py b/tests/packaged_modules/test_genbank.py
+index 346388d4afd..db7e19b5e0d 100644
+--- a/tests/packaged_modules/test_genbank.py
++++ b/tests/packaged_modules/test_genbank.py
+@@ -1010,6 +1010,30 @@ def test_genbank_slash_inside_open_quoted_value_is_not_a_new_qualifier(tmp_path)
+     assert features[0]["qualifiers"] == {"note": ["see /docs"]}
+ 
+ 
++def test_genbank_doubled_quotes_in_value_are_unescaped(tmp_path):
++    """The feature table writes a quotation mark inside a quoted value as \"\"."""
++    text = (
++        _HDR
++        + '     gene            1..10\n                     /note="the ""x"" gene"\n'
++        + '                     /label="ends in ""q"""\n'
++        + _ORIGIN
++    )
++    _, features = _parse_one(tmp_path, text)
++    assert features[0]["qualifiers"] == {"note": ['the "x" gene'], "label": ['ends in "q"']}
++
++
++def test_genbank_doubled_quote_at_line_end_keeps_value_open(tmp_path):
++    """A wrapped line ending in an escaped \"\" does not close the quoted value."""
++    text = (
++        _HDR
++        + '     gene            1..10\n                     /note="wrapped after ""\n'
++        + '                     quoted"" rest"\n                     /gene="abc"\n'
++        + _ORIGIN
++    )
++    _, features = _parse_one(tmp_path, text)
++    assert features[0]["qualifiers"] == {"note": ['wrapped after " quoted" rest'], "gene": ["abc"]}
++
++
+ def test_genbank_base_count_line_is_not_a_feature(tmp_path):
+     """Legacy BASE COUNT sits between FEATURES and ORIGIN and is a keyword, not a feature."""
+     text = _HDR + "     source          1..4\nBASE COUNT       1 a 1 c 1 g 1 t\n" + _ORIGIN

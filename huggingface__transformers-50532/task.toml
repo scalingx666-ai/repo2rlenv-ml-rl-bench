@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/huggingface__transformers-50532"
+description = "Speed up `bad_words_ids` and `sequence_bias` by matching multi-token sequences in one pass"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "transformers",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "huggingface/transformers"
+ref = "147e66b34836d55637ddc9a936e51f5b77b12802"
+reference = "https://github.com/huggingface/transformers/pull/50532"
+source_access = "auto"
+built_at = "2026-11-11T14:31:20.269285+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:ccf9dbd209e9d0d456cb5f25aa680595856d9bb0f5413e661bb78f970daf91e4"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-10T14:12:35Z"
+diff_format = "unified"
+context_files = [
+    "src/transformers/generation/logits_process.py",
+    "tests/generation/test_logits_process.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 55
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

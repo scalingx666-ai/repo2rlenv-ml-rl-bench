@@ -1,0 +1,64 @@
+version = "1.0"
+
+[task]
+name = "default/huggingface__accelerate-4368"
+description = "Bump doc-builder workflow pin"
+
+[metadata]
+difficulty = "small"
+category = "bugfix"
+keywords = [
+    "accelerate",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "huggingface/accelerate"
+ref = "7d8824f10f8be1ea405d611c98d51ebfbf4821cd"
+reference = "https://github.com/huggingface/accelerate/pull/4368"
+source_access = "auto"
+built_at = "2026-11-11T14:25:04.703385+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:211d0976bb2ce5053293d2a7de5b2b33f6048576d433e69896026989e2aaadec"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-10-06T09:19:51Z"
+diff_format = "unified"
+context_files = [
+    ".github/workflows/build_documentation.yml",
+    ".github/workflows/build_pr_documentation.yml",
+    ".github/workflows/upload_pr_documentation.yml",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 6
+difficulty = "small"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

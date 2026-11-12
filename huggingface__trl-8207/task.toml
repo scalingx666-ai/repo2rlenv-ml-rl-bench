@@ -1,0 +1,62 @@
+version = "1.0"
+
+[task]
+name = "default/huggingface__trl-8207"
+description = "Fix a passed PeftModel and refuse prompt-learning adapters in AsyncGRPO"
+
+[metadata]
+difficulty = "small"
+category = "bugfix"
+keywords = [
+    "trl",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "huggingface/trl"
+ref = "9507c44fc1714ac2b2d9ba9cc65efd2b5c9a351a"
+reference = "https://github.com/huggingface/trl/pull/8207"
+source_access = "auto"
+built_at = "2026-11-11T14:23:30.137874+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:2452018e67a83bd3547e5a6301f6aa9102bc7df754be138248be430064c99d78"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-11T12:00:18Z"
+diff_format = "unified"
+context_files = [
+    "trl/experimental/async_grpo/async_grpo_trainer.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 17
+difficulty = "small"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

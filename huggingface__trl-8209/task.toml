@@ -1,0 +1,62 @@
+version = "1.0"
+
+[task]
+name = "default/huggingface__trl-8209"
+description = "Tag the model in AsyncGRPO"
+
+[metadata]
+difficulty = "easy"
+category = "bugfix"
+keywords = [
+    "trl",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "huggingface/trl"
+ref = "f2ea8a9ad41f8634081ef7433a1435cecc56a4af"
+reference = "https://github.com/huggingface/trl/pull/8209"
+source_access = "auto"
+built_at = "2026-11-11T14:23:22.729664+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:8d0ef87f62887831a20ebcb808358ab7e781c771dfe39b873022abdc8f5697c5"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-10T16:43:58Z"
+diff_format = "unified"
+context_files = [
+    "trl/experimental/async_grpo/async_grpo_trainer.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 3
+difficulty = "trivial"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/huggingface__datasets-8856"
+description = "Reject duplicate WebDataset fields instead of silently overwriting data"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "datasets",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "huggingface/datasets"
+ref = "18378f7322c7eb1c2d93f895dd8e9f71f8623934"
+reference = "https://github.com/huggingface/datasets/pull/8856"
+source_access = "auto"
+built_at = "2026-11-11T14:29:17.326973+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:73db85722aa946483901170ca86736d9aef881832fc22cc4610493c5ba8e574a"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-10-19T18:07:32Z"
+diff_format = "unified"
+context_files = [
+    "src/datasets/packaged_modules/webdataset/webdataset.py",
+    "tests/packaged_modules/test_webdataset.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 36
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

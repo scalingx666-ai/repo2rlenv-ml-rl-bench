@@ -1,0 +1,15 @@
+diff --git a/trl/experimental/async_grpo/async_grpo_trainer.py b/trl/experimental/async_grpo/async_grpo_trainer.py
+index 26cc758c56c..7c2ddf31cb9 100644
+--- a/trl/experimental/async_grpo/async_grpo_trainer.py
++++ b/trl/experimental/async_grpo/async_grpo_trainer.py
+@@ -1142,6 +1142,10 @@ def __init__(
+                 )
+             num_placeholder_rows = args.per_device_train_batch_size * args.gradient_accumulation_steps
+             train_dataset = Dataset.from_dict({"prompt": [[{"role": "user", "content": ""}]] * num_placeholder_rows})
++        elif not isinstance(train_dataset, (Dataset, IterableDataset)):
++            raise TypeError(
++                f"`train_dataset` must be a `Dataset` or `IterableDataset`, got `{type(train_dataset).__name__}`."
++            )
+ 
+         # Initialize the Trainer
+         super().__init__(

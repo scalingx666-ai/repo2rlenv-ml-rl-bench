@@ -1,0 +1,187 @@
+diff --git a/src/peft/tuners/hra/model.py b/src/peft/tuners/hra/model.py
+index 8eb57bca54..cfbfb038d8 100644
+--- a/src/peft/tuners/hra/model.py
++++ b/src/peft/tuners/hra/model.py
+@@ -39,7 +39,7 @@ class HRAModel(BaseTuner):
+     Example:
+         ```py
+         >>> from diffusers import StableDiffusionPipeline
+-        >>> from peft import HRAModel, HRAConfig
++        >>> from peft import HRAConfig, get_peft_model
+ 
+         >>> config_te = HRAConfig(
+         ...     r=8,
+@@ -62,8 +62,8 @@ class HRAModel(BaseTuner):
+         ... )
+ 
+         >>> model = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5")
+-        >>> model.text_encoder = HRAModel(model.text_encoder, config_te, "default")
+-        >>> model.unet = HRAModel(model.unet, config_unet, "default")
++        >>> model.text_encoder = get_peft_model(model.text_encoder, config_te)
++        >>> model.unet = get_peft_model(model.unet, config_unet)
+         ```
+ 
+     **Attributes**:
+diff --git a/src/peft/tuners/loha/model.py b/src/peft/tuners/loha/model.py
+index 0efd7c480f..ebfa035c12 100644
+--- a/src/peft/tuners/loha/model.py
++++ b/src/peft/tuners/loha/model.py
+@@ -43,11 +43,11 @@ class LoHaModel(LycorisTuner):
+     Example:
+         ```py
+         >>> from diffusers import StableDiffusionPipeline
+-        >>> from peft import LoHaModel, LoHaConfig
++        >>> from peft import LoHaConfig, get_peft_model
+ 
+         >>> config_te = LoHaConfig(
+         ...     r=8,
+-        ...     lora_alpha=32,
++        ...     alpha=32,
+         ...     target_modules=["k_proj", "q_proj", "v_proj", "out_proj", "fc1", "fc2"],
+         ...     rank_dropout=0.0,
+         ...     module_dropout=0.0,
+@@ -55,7 +55,7 @@ class LoHaModel(LycorisTuner):
+         ... )
+         >>> config_unet = LoHaConfig(
+         ...     r=8,
+-        ...     lora_alpha=32,
++        ...     alpha=32,
+         ...     target_modules=[
+         ...         "proj_in",
+         ...         "proj_out",
+@@ -73,8 +73,8 @@ class LoHaModel(LycorisTuner):
+         ... )
+ 
+         >>> model = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5")
+-        >>> model.text_encoder = LoHaModel(model.text_encoder, config_te, "default")
+-        >>> model.unet = LoHaModel(model.unet, config_unet, "default")
++        >>> model.text_encoder = get_peft_model(model.text_encoder, config_te)
++        >>> model.unet = get_peft_model(model.unet, config_unet)
+         ```
+ 
+     **Attributes**:
+diff --git a/src/peft/tuners/lokr/model.py b/src/peft/tuners/lokr/model.py
+index 7cca89895b..9868622817 100644
+--- a/src/peft/tuners/lokr/model.py
++++ b/src/peft/tuners/lokr/model.py
+@@ -44,11 +44,11 @@ class LoKrModel(LycorisTuner):
+     Example:
+         ```py
+         >>> from diffusers import StableDiffusionPipeline
+-        >>> from peft import LoKrModel, LoKrConfig
++        >>> from peft import LoKrConfig, get_peft_model
+ 
+         >>> config_te = LoKrConfig(
+         ...     r=8,
+-        ...     lora_alpha=32,
++        ...     alpha=32,
+         ...     target_modules=["k_proj", "q_proj", "v_proj", "out_proj", "fc1", "fc2"],
+         ...     rank_dropout=0.0,
+         ...     module_dropout=0.0,
+@@ -56,7 +56,7 @@ class LoKrModel(LycorisTuner):
+         ... )
+         >>> config_unet = LoKrConfig(
+         ...     r=8,
+-        ...     lora_alpha=32,
++        ...     alpha=32,
+         ...     target_modules=[
+         ...         "proj_in",
+         ...         "proj_out",
+@@ -74,8 +74,8 @@ class LoKrModel(LycorisTuner):
+         ... )
+ 
+         >>> model = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5")
+-        >>> model.text_encoder = LoKrModel(model.text_encoder, config_te, "default")
+-        >>> model.unet = LoKrModel(model.unet, config_unet, "default")
++        >>> model.text_encoder = get_peft_model(model.text_encoder, config_te)
++        >>> model.unet = get_peft_model(model.unet, config_unet)
+         ```
+ 
+     **Attributes**:
+diff --git a/src/peft/tuners/miss/model.py b/src/peft/tuners/miss/model.py
+index 340101130e..9ff9c7a355 100644
+--- a/src/peft/tuners/miss/model.py
++++ b/src/peft/tuners/miss/model.py
+@@ -37,7 +37,7 @@ def _get_tuner_layer_class(target_base_layer: torch.nn.Module) -> type[MissLayer
+ 
+ class MissModel(BaseTuner):
+     """
+-    Creates Householder reflection adaptation (MiSS) model from a pretrained model. The method is described in
++    Creates Matrix Shard Sharing (MiSS) model from a pretrained model. The method is described in
+     https://huggingface.co/papers/2409.15371
+ 
+     Args:
+@@ -52,32 +52,12 @@ class MissModel(BaseTuner):
+ 
+     Example:
+         ```py
+-        >>> from diffusers import StableDiffusionPipeline
+-        >>> from peft import MissModel, MissConfig
+-
+-        >>> config_te = MissConfig(
+-        ...     r=8,
+-        ...     target_modules=["k_proj", "q_proj", "v_proj", "out_proj", "fc1", "fc2"],
+-        ...     init_weights=True,
+-        ... )
+-        >>> config_unet = MissConfig(
+-        ...     r=8,
+-        ...     target_modules=[
+-        ...         "proj_in",
+-        ...         "proj_out",
+-        ...         "to_k",
+-        ...         "to_q",
+-        ...         "to_v",
+-        ...         "to_out.0",
+-        ...         "ff.net.0.proj",
+-        ...         "ff.net.2",
+-        ...     ],
+-        ...     init_weights=True,
+-        ... )
+-
+-        >>> model = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5")
+-        >>> model.text_encoder = MissModel(model.text_encoder, config_te, "default")
+-        >>> model.unet = MissModel(model.unet, config_unet, "default")
++        >>> from transformers import AutoModelForCausalLM
++        >>> from peft import MissConfig, get_peft_model
++
++        >>> base_model = AutoModelForCausalLM.from_pretrained("facebook/opt-125m")
++        >>> config = MissConfig(r=64)
++        >>> model = get_peft_model(base_model, config)
+         ```
+ 
+     **Attributes**:
+diff --git a/src/peft/tuners/oft/model.py b/src/peft/tuners/oft/model.py
+index 739586a964..6d2248eb4c 100644
+--- a/src/peft/tuners/oft/model.py
++++ b/src/peft/tuners/oft/model.py
+@@ -59,16 +59,16 @@ class OFTModel(BaseTuner):
+     Example:
+         ```py
+         >>> from diffusers import StableDiffusionPipeline
+-        >>> from peft import OFTModel, OFTConfig
++        >>> from peft import OFTConfig, get_peft_model
+ 
+         >>> config_te = OFTConfig(
+-        ...     r=8,
++        ...     oft_block_size=32,
+         ...     target_modules=["k_proj", "q_proj", "v_proj", "out_proj", "fc1", "fc2"],
+         ...     module_dropout=0.0,
+         ...     init_weights=True,
+         ... )
+         >>> config_unet = OFTConfig(
+-        ...     r=8,
++        ...     oft_block_size=32,
+         ...     target_modules=[
+         ...         "proj_in",
+         ...         "proj_out",
+@@ -84,8 +84,8 @@ class OFTModel(BaseTuner):
+         ... )
+ 
+         >>> model = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5")
+-        >>> model.text_encoder = OFTModel(model.text_encoder, config_te, "default")
+-        >>> model.unet = OFTModel(model.unet, config_unet, "default")
++        >>> model.text_encoder = get_peft_model(model.text_encoder, config_te)
++        >>> model.unet = get_peft_model(model.unet, config_unet)
+         ```
+ 
+     **Attributes**:

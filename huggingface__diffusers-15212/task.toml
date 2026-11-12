@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/huggingface__diffusers-15212"
+description = "Reset stateful cache hooks after every ModularPipeline call"
+
+[metadata]
+difficulty = "small"
+category = "bugfix"
+keywords = [
+    "diffusers",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "huggingface/diffusers"
+ref = "1d952fb2a9d815088a21434d4bf6a2ef9fd63168"
+reference = "https://github.com/huggingface/diffusers/pull/15212"
+source_access = "auto"
+built_at = "2026-11-11T14:30:13.380656+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:d9b489800c0744c8308049061d5eff4dafdd4d6c900a33cdc608158ea99c6547"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-09T01:25:42Z"
+diff_format = "unified"
+context_files = [
+    "src/diffusers/modular_pipelines/cosmos/modular_pipeline.py",
+    "src/diffusers/modular_pipelines/modular_pipeline.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 14
+difficulty = "small"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

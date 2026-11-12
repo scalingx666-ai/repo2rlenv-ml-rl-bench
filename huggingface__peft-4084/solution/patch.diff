@@ -1,0 +1,68 @@
+diff --git a/src/peft/tuners/adalora/layer.py b/src/peft/tuners/adalora/layer.py
+index 4cc7a62f59..5534b18eca 100644
+--- a/src/peft/tuners/adalora/layer.py
++++ b/src/peft/tuners/adalora/layer.py
+@@ -224,6 +224,8 @@ def update_layer(self, adapter_name: str, r: int, lora_alpha: int, config: AdaLo
+         inference_mode = config.inference_mode
+         if r < 0:
+             raise ValueError(f"`r` should be a positive integer or 0, but the value passed is {r}")
++        if self.get_base_layer().groups > 1:
++            raise ValueError("AdaLoRA does not support Conv2d layers with groups > 1.")
+ 
+         self.r[adapter_name] = r
+         self.lora_alpha[adapter_name] = lora_alpha
+@@ -332,14 +334,7 @@ def forward(self, x: torch.Tensor, *args: Any, **kwargs: Any) -> torch.Tensor:
+                 delta_w = (lora_B @ (lora_A * lora_E) * scaling / ranknum).reshape(base.weight.shape)
+                 # Use in-place add so result keeps its original dtype (matches SVDLinear);
+                 # otherwise result would be upcast to lora_A.dtype and break subsequent fp16/bf16 ops.
+-                result += nn.functional.conv2d(
+-                    dropout(x),
+-                    delta_w,
+-                    stride=base.stride,
+-                    padding=base.padding,
+-                    dilation=base.dilation,
+-                    groups=base.groups,
+-                )
++                result += base._conv_forward(dropout(x), delta_w, None)
+         return result
+ 
+     def __repr__(self) -> str:
+diff --git a/tests/test_initialization.py b/tests/test_initialization.py
+index ce1fe27450..e99f82a3ec 100644
+--- a/tests/test_initialization.py
++++ b/tests/test_initialization.py
+@@ -2324,6 +2324,12 @@ def test_adalora_negative_orth_reg_weight_raises(self):
+         with pytest.raises(ValueError, match=re.escape(msg)):
+             AdaLoraConfig(target_modules=["linear"], total_step=1, orth_reg_weight=-0.5)
+ 
++    def test_adalora_conv2d_groups_raises(self):
++        model = nn.Sequential(nn.Conv2d(4, 8, 3, groups=2))
++        config = AdaLoraConfig(target_modules=["0"], total_step=1)
++        with pytest.raises(ValueError, match="AdaLoRA does not support Conv2d layers with groups > 1"):
++            get_peft_model(model, config)
++
+     def get_model(self):
+         class MyModule(nn.Module):
+             def __init__(self):
+diff --git a/tests/test_vision_models.py b/tests/test_vision_models.py
+index be2269a794..c0e25d10c7 100644
+--- a/tests/test_vision_models.py
++++ b/tests/test_vision_models.py
+@@ -329,16 +329,11 @@ def test_base_output_preserved_after_merging(self, config, conv_kwargs):
+ 
+     @pytest.mark.parametrize("config", CONFIGS.values(), ids=CONFIGS.keys())
+     @pytest.mark.parametrize("conv_kwargs", conv_kwargs)
+-    def test_unmerged_and_merged_forward_same_result(self, config, conv_kwargs, request):
++    def test_unmerged_and_merged_forward_same_result(self, config, conv_kwargs):
+         # merging should not change the result
+         if self.should_skip(config, conv_kwargs):
+             pytest.skip("This method assumes square convolution kernels throughout its weight handling")
+ 
+-        if isinstance(config, AdaLoraConfig) and conv_kwargs.get("padding_mode", "zeros") != "zeros":
+-            request.node.add_marker(
+-                pytest.mark.xfail(reason="AdaLoRA's adapter branch ignores padding_mode", strict=True)
+-            )
+-
+         torch.manual_seed(0)
+         model = self.get_conv_model(**conv_kwargs)
+ 

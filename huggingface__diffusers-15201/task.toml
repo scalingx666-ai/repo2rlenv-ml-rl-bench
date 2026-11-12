@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/huggingface__diffusers-15201"
+description = "Pin hf-doc-builder to 0.6.0"
+
+[metadata]
+difficulty = "easy"
+category = "bugfix"
+keywords = [
+    "diffusers",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "huggingface/diffusers"
+ref = "f7fc4389e508cad81bec8e7354aeacf8ddbcdcc0"
+reference = "https://github.com/huggingface/diffusers/pull/15201"
+source_access = "auto"
+built_at = "2026-11-11T14:30:17.430860+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:a587677de0fae777bad701649c4043b24053a62a99ba2986628ad9c627541ec9"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-07T08:24:40Z"
+diff_format = "unified"
+context_files = [
+    "setup.py",
+    "src/diffusers/dependency_versions_table.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 4
+difficulty = "trivial"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

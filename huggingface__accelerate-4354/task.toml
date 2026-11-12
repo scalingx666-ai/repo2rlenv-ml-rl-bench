@@ -1,0 +1,62 @@
+version = "1.0"
+
+[task]
+name = "default/huggingface__accelerate-4354"
+description = "Fix wait_for_everyone() crashing on MULTI_CPU when the machine has an accelerator"
+
+[metadata]
+difficulty = "easy"
+category = "bugfix"
+keywords = [
+    "accelerate",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "huggingface/accelerate"
+ref = "421af8bee5bda705d3c763f491b7a794f471818e"
+reference = "https://github.com/huggingface/accelerate/pull/4354"
+source_access = "auto"
+built_at = "2026-11-11T14:25:08.967264+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:c2a637511fb04fdd1e5e2965311629cfd3c31217cfffb00acd0c9512aae2a60c"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-10-01T13:09:09Z"
+diff_format = "unified"
+context_files = [
+    "src/accelerate/state.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 5
+difficulty = "trivial"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

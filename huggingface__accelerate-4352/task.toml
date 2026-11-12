@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/huggingface__accelerate-4352"
+description = "Fix loading checkpoints with modules offloaded to disk"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "accelerate",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "huggingface/accelerate"
+ref = "421af8bee5bda705d3c763f491b7a794f471818e"
+reference = "https://github.com/huggingface/accelerate/pull/4352"
+source_access = "auto"
+built_at = "2026-11-11T14:25:11.564090+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:372de9c2326427b86031fee5da5139afe18520acebb00276f3e13ab13ccbc79d"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-09-29T15:50:25Z"
+diff_format = "unified"
+context_files = [
+    "src/accelerate/utils/modeling.py",
+    "tests/test_modeling_utils.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 32
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

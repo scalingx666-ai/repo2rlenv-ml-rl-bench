@@ -1,0 +1,14 @@
+diff --git a/trl/experimental/async_grpo/async_grpo_trainer.py b/trl/experimental/async_grpo/async_grpo_trainer.py
+index 26cc758c56c..bc126fe21e4 100644
+--- a/trl/experimental/async_grpo/async_grpo_trainer.py
++++ b/trl/experimental/async_grpo/async_grpo_trainer.py
+@@ -1153,6 +1153,9 @@ def __init__(
+             optimizers=optimizers,
+         )
+ 
++        # Add tags to the model
++        self.model.add_model_tags(self._tag_names)
++
+         precision = self.accelerator.mixed_precision
+         self.compute_dtype = {
+             "bf16": "bfloat16",

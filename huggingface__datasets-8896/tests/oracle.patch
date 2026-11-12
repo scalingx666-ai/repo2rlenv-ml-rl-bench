@@ -1,0 +1,57 @@
+diff --git a/src/datasets/arrow_dataset.py b/src/datasets/arrow_dataset.py
+index 9c571174156..5d0893405d6 100644
+--- a/src/datasets/arrow_dataset.py
++++ b/src/datasets/arrow_dataset.py
+@@ -3844,7 +3844,14 @@ def prepare_outputs(pa_inputs, inputs, processed_inputs):
+                         processed_inputs.pop(column)
+             if check_same_num_examples:
+                 input_num_examples = len(pa_inputs)
+-                processed_inputs_num_examples = len(processed_inputs[next(iter(processed_inputs.keys()))])
++                if not isinstance(processed_inputs, Mapping):
++                    # pa.Table, pd.DataFrame or pl.DataFrame
++                    processed_inputs_num_examples = len(processed_inputs)
++                elif processed_inputs:
++                    processed_inputs_num_examples = len(next(iter(processed_inputs.values())))
++                else:
++                    # an empty dict doesn't update any column
++                    processed_inputs_num_examples = input_num_examples
+                 if input_num_examples != processed_inputs_num_examples:
+                     raise DatasetTransformationNotAllowedError(
+                         "Using `.map` in batched mode on a dataset with attached indexes is allowed only if it doesn't create or remove existing examples. You can first run `.drop_index() to remove your index and then re-add it."
+diff --git a/tests/test_search.py b/tests/test_search.py
+index 142c92522ea..c4c27fea2d0 100644
+--- a/tests/test_search.py
++++ b/tests/test_search.py
+@@ -7,7 +7,8 @@
+ import numpy as np
+ import pytest
+ 
+-from datasets.arrow_dataset import Dataset
++from datasets.arrow_dataset import Dataset, DatasetTransformationNotAllowedError
++from datasets.features import Value
+ from datasets.search import ElasticSearchIndex, FaissIndex, MissingIndex
+ 
+ from .utils import require_elasticsearch, require_faiss
+@@ -84,6 +85,22 @@ def test_drop_index(self):
+         dset.drop_index("vecs")
+         self.assertRaises(MissingIndex, partial(dset.get_nearest_examples, "vecs2", np.ones(5, dtype=np.float32)))
+ 
++    def test_batched_map_with_index(self):
++        dset: Dataset = self._create_dummy_dataset()
++        dset.add_faiss_index_from_external_arrays(
++            external_arrays=np.ones((30, 5)) * np.arange(30).reshape(-1, 1), index_name="vecs"
++        )
++        # cast and cast_column run a batched map that returns a pyarrow table
++        dset_cast = dset.cast_column("filename", Value("large_string"))
++        self.assertEqual(dset_cast.features["filename"], Value("large_string"))
++        self.assertEqual(dset_cast["filename"][:], dset["filename"][:])
++        dset_table = dset.with_format("arrow").map(lambda table: table, batched=True, batch_size=8)
++        self.assertEqual(dset_table.num_rows, 30)
++        dset_empty = dset.map(lambda batch: {}, batched=True, batch_size=8)
++        self.assertEqual(dset_empty.num_rows, 30)
++        with pytest.raises(DatasetTransformationNotAllowedError):
++            dset.with_format("arrow").map(lambda table: table.slice(0, 1), batched=True, batch_size=8)
++
+     def test_add_elasticsearch_index(self):
+         from elasticsearch import Elasticsearch
+ 

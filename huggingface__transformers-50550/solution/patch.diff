@@ -1,0 +1,52 @@
+diff --git a/.github/workflows/build_documentation.yml b/.github/workflows/build_documentation.yml
+index a5092e1f8bab..9c00df848163 100644
+--- a/.github/workflows/build_documentation.yml
++++ b/.github/workflows/build_documentation.yml
+@@ -37,7 +37,7 @@ jobs:
+ 
+    build:
+     needs: python-version
+-    uses: huggingface/doc-builder/.github/workflows/build_main_documentation.yml@145b9d4f6ab65ad3af87c66773b2c43294e52446  # main (light installs, no custom container)
++    uses: huggingface/doc-builder/.github/workflows/build_main_documentation.yml@9b0e5b334b65d006b59e0b1a022a33122f7e12aa  # main (light installs, no custom container)
+     with:
+       commit_sha: ${{ github.sha }}
+       package: transformers
+diff --git a/.github/workflows/build_pr_documentation.yml b/.github/workflows/build_pr_documentation.yml
+index 15995f2769e9..15c7a6685fec 100644
+--- a/.github/workflows/build_pr_documentation.yml
++++ b/.github/workflows/build_pr_documentation.yml
+@@ -52,7 +52,7 @@ jobs:
+   build:
+     needs: check_links
+     if: github.event_name == 'pull_request'
+-    uses: huggingface/doc-builder/.github/workflows/build_pr_documentation.yml@145b9d4f6ab65ad3af87c66773b2c43294e52446  # main
++    uses: huggingface/doc-builder/.github/workflows/build_pr_documentation.yml@9b0e5b334b65d006b59e0b1a022a33122f7e12aa  # main
+     with:
+       commit_sha: ${{ github.event.pull_request.head.sha }}
+       pr_number: ${{ github.event.number }}
+diff --git a/.github/workflows/pr_build_doc_with_comment.yml b/.github/workflows/pr_build_doc_with_comment.yml
+index 05e590878cfb..8a5ef8db7b64 100644
+--- a/.github/workflows/pr_build_doc_with_comment.yml
++++ b/.github/workflows/pr_build_doc_with_comment.yml
+@@ -122,7 +122,7 @@ jobs:
+     name: Build doc
+     needs: [get-pr-number, get-pr-info, verify_pr_commit, python-version]
+     if: ${{ needs.get-pr-number.outputs.PR_NUMBER != '' && needs.verify_pr_commit.result == 'success' }}
+-    uses: huggingface/doc-builder/.github/workflows/build_pr_documentation.yml@145b9d4f6ab65ad3af87c66773b2c43294e52446 # main
++    uses: huggingface/doc-builder/.github/workflows/build_pr_documentation.yml@9b0e5b334b65d006b59e0b1a022a33122f7e12aa # main
+     with:
+       commit_sha: ${{ needs.get-pr-info.outputs.PR_HEAD_SHA }}
+       pr_number: ${{ needs.get-pr-number.outputs.PR_NUMBER }}
+diff --git a/.github/workflows/upload_pr_documentation.yml b/.github/workflows/upload_pr_documentation.yml
+index 6a7181dbcf3b..4ba1050f25dc 100644
+--- a/.github/workflows/upload_pr_documentation.yml
++++ b/.github/workflows/upload_pr_documentation.yml
+@@ -11,7 +11,7 @@ permissions:
+ 
+ jobs:
+   build:
+-    uses: huggingface/doc-builder/.github/workflows/upload_pr_documentation.yml@145b9d4f6ab65ad3af87c66773b2c43294e52446  # main
++    uses: huggingface/doc-builder/.github/workflows/upload_pr_documentation.yml@9b0e5b334b65d006b59e0b1a022a33122f7e12aa  # main
+     with:
+       package_name: transformers
+     secrets:

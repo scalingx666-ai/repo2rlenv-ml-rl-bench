@@ -1,0 +1,64 @@
+version = "1.0"
+
+[task]
+name = "default/huggingface__transformers-50577"
+description = "Fix RecurrentGemma padded generation by declaring its `layer_types`"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "transformers",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "huggingface/transformers"
+ref = "04935b4f86ece0b32581331c9f62363129ac9a65"
+reference = "https://github.com/huggingface/transformers/pull/50577"
+source_access = "auto"
+built_at = "2026-11-11T14:31:08.859153+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:2c20f01a6fd1c6c873a9aa36c0ac53a18ccf3ec4327ca1bfe41d8e8ae5a81100"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-10T18:44:00Z"
+diff_format = "unified"
+context_files = [
+    "src/transformers/models/recurrent_gemma/configuration_recurrent_gemma.py",
+    "src/transformers/models/recurrent_gemma/modeling_recurrent_gemma.py",
+    "tests/models/recurrent_gemma/test_modeling_recurrent_gemma.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 43
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

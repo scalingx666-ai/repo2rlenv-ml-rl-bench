@@ -1,0 +1,36 @@
+diff --git a/src/diffusers/modular_pipelines/cosmos/modular_pipeline.py b/src/diffusers/modular_pipelines/cosmos/modular_pipeline.py
+index 6601918aa463..d6c09703c12e 100644
+--- a/src/diffusers/modular_pipelines/cosmos/modular_pipeline.py
++++ b/src/diffusers/modular_pipelines/cosmos/modular_pipeline.py
+@@ -18,14 +18,6 @@ class Cosmos3OmniModularPipeline(ModularPipeline):
+     inverse_image_resolution_template = "This image is not of {height}x{width} resolution."
+     inverse_video_resolution_template = "This video is not of {height}x{width} resolution."
+ 
+-    def __call__(self, *args, **kwargs):
+-        transformer = getattr(self, "transformer", None)
+-        try:
+-            return super().__call__(*args, **kwargs)
+-        finally:
+-            if hasattr(transformer, "_reset_stateful_cache"):
+-                transformer._reset_stateful_cache()
+-
+     @property
+     def vae_scale_factor_spatial(self):
+         if getattr(self, "vae", None) is not None:
+diff --git a/src/diffusers/modular_pipelines/modular_pipeline.py b/src/diffusers/modular_pipelines/modular_pipeline.py
+index e098aca8f0be..34872ecc1b3b 100644
+--- a/src/diffusers/modular_pipelines/modular_pipeline.py
++++ b/src/diffusers/modular_pipelines/modular_pipeline.py
+@@ -3041,6 +3041,12 @@ def __call__(self, state: PipelineState = None, output: str | list[str] = None,
+                 error_msg = f"Error in block: ({self._blocks.__class__.__name__}):\n"
+                 logger.error(error_msg)
+                 raise
++            finally:
++                # Cache hooks (FirstBlockCache, MagCache, ...) keep state across a run. Clear it so the next call
++                # starts fresh, as `maybe_free_model_hooks` does for standard pipelines.
++                for component in self.components.values():
++                    if hasattr(component, "_reset_stateful_cache"):
++                        component._reset_stateful_cache()
+ 
+         if output is None:
+             return state

@@ -1,0 +1,78 @@
+diff --git a/src/accelerate/utils/dataclasses.py b/src/accelerate/utils/dataclasses.py
+index b112d6f4816..d4af5067ff3 100644
+--- a/src/accelerate/utils/dataclasses.py
++++ b/src/accelerate/utils/dataclasses.py
+@@ -2087,7 +2087,13 @@ def set_auto_wrap_policy(self, model):
+         default_transformer_cls_names_to_wrap = list(no_split_modules) if no_split_modules is not None else []
+         if self.auto_wrap_policy == transformer_auto_wrap_policy:
+             if self.transformer_cls_names_to_wrap is None:
+-                self.transformer_cls_names_to_wrap = default_transformer_cls_names_to_wrap
++                # `_no_split_modules` can name classes this model doesn't instantiate (e.g. the ESMFold blocks of an
++                # `EsmModel`, or the audio layers of a Gemma 4 checkpoint without audio tower)
++                self.transformer_cls_names_to_wrap = [
++                    name
++                    for name in default_transformer_cls_names_to_wrap
++                    if get_module_class_from_name(model, name) is not None
++                ]
+             transformer_cls_to_wrap = set()
+             for layer_class in self.transformer_cls_names_to_wrap:
+                 transformer_cls = get_module_class_from_name(model, layer_class)
+diff --git a/src/accelerate/utils/fsdp_utils.py b/src/accelerate/utils/fsdp_utils.py
+index ec403bcc638..ab6345a8c8c 100644
+--- a/src/accelerate/utils/fsdp_utils.py
++++ b/src/accelerate/utils/fsdp_utils.py
+@@ -962,7 +962,11 @@ def fsdp2_prepare_auto_wrap_policy(fsdp2_plugin, model: torch.nn.Module) -> Call
+         no_split_modules = getattr(model, "_no_split_modules", None)
+         if no_split_modules is None:
+             no_split_modules = []
+-        transformer_cls_names_to_wrap = list(no_split_modules)
++        # `_no_split_modules` can name classes this model doesn't instantiate (e.g. the ESMFold blocks of an
++        # `EsmModel`, or the audio layers of a Gemma 4 checkpoint without audio tower)
++        transformer_cls_names_to_wrap = [
++            name for name in no_split_modules if get_module_class_from_name(model, name) is not None
++        ]
+         if fsdp2_plugin.transformer_cls_names_to_wrap is not None:
+             transformer_cls_names_to_wrap = fsdp2_plugin.transformer_cls_names_to_wrap
+         transformer_cls_to_wrap = set()
+diff --git a/tests/fsdp/test_fsdp.py b/tests/fsdp/test_fsdp.py
+index 477541bfcd0..2f10484d67c 100644
+--- a/tests/fsdp/test_fsdp.py
++++ b/tests/fsdp/test_fsdp.py
+@@ -53,6 +53,7 @@
+     _set_model_state_dict,
+     disable_fsdp_ram_efficient_loading,
+     enable_fsdp_ram_efficient_loading,
++    fsdp2_prepare_auto_wrap_policy,
+     load_fsdp_optimizer,
+     save_fsdp_optimizer,
+ )
+@@ -63,6 +64,7 @@
+ 
+ BERT_BASE_CASED = "bert-base-cased"
+ LLAMA_TESTING = "hf-internal-testing/tiny-random-LlamaForCausalLM"
++ESM_TESTING = "hf-internal-testing/tiny-random-EsmModel"
+ FP16 = "fp16"
+ BF16 = "bf16"
+ 
+@@ -398,6 +400,21 @@ def test_auto_wrap_policy(self):
+         fsdp_plugin.set_auto_wrap_policy(model)
+         assert fsdp_plugin.auto_wrap_policy is None
+ 
++    def test_auto_wrap_policy_skips_absent_no_split_modules(self):
++        # `EsmModel` lists `EsmFoldTriangularSelfAttentionBlock` in `_no_split_modules`, but only `EsmForProteinFolding`
++        # contains it
++        model = AutoModel.from_pretrained(ESM_TESTING)
++        env = self.fsdp_envs[self.current_fsdp_version].copy()
++        with patch_environment(**env):
++            fsdp_plugin = FullyShardedDataParallelPlugin(auto_wrap_policy="TRANSFORMER_BASED_WRAP")
++        if self.current_fsdp_version == 1:
++            fsdp_plugin.set_auto_wrap_policy(model)
++            assert fsdp_plugin.transformer_cls_names_to_wrap == ["EsmLayer", "EsmEmbeddings"]
++        else:
++            policy = fsdp2_prepare_auto_wrap_policy(fsdp_plugin, model)
++            assert policy(model.encoder.layer[0])
++            assert policy(model.embeddings)
++
+     def test_mixed_precision(self):
+         fsdp_version = self.current_fsdp_version
+         if fsdp_version == 2:

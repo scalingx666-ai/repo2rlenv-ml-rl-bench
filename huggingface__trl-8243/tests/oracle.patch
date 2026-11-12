@@ -1,0 +1,28 @@
+diff --git a/trl/experimental/async_distillation/async_distillation_trainer.py b/trl/experimental/async_distillation/async_distillation_trainer.py
+index c2f4dd070f3..fb2abefd672 100644
+--- a/trl/experimental/async_distillation/async_distillation_trainer.py
++++ b/trl/experimental/async_distillation/async_distillation_trainer.py
+@@ -1802,6 +1802,9 @@ def _log_step_metrics(self) -> None:
+                 self._rollout_dataset.lookahead_tokens = (
+                     max(self.args.max_staleness, 1) * self._rollout_dataset.step_tokens
+                 )
++                self._rollout_dataset.token_allowance.value = (
++                    self._rollout_dataset.consumed_tokens + self._rollout_dataset.lookahead_tokens
++                )
+             self._rollout_dataset.step_tokens = 0
+ 
+         # Throughput and MFU are reported on TWO bases, because for async distillation one number cannot answer both
+diff --git a/trl/experimental/async_grpo/async_grpo_trainer.py b/trl/experimental/async_grpo/async_grpo_trainer.py
+index 26cc758c56c..5ec75e9112f 100644
+--- a/trl/experimental/async_grpo/async_grpo_trainer.py
++++ b/trl/experimental/async_grpo/async_grpo_trainer.py
+@@ -1608,6 +1608,9 @@ def _log_step_metrics(self) -> None:
+                 self._rollout_dataset.lookahead_tokens = (
+                     max(self.args.max_staleness, 1) * self._rollout_dataset.step_tokens
+                 )
++                self._rollout_dataset.token_allowance.value = (
++                    self._rollout_dataset.consumed_tokens + self._rollout_dataset.lookahead_tokens
++                )
+             self._rollout_dataset.step_tokens = 0
+             metrics["batch/groups_per_step"].append(float(len(self._trained_groups) - self._last_groups_trained))
+             self._last_groups_trained = len(self._trained_groups)

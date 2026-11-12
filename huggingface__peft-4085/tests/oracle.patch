@@ -1,0 +1,193 @@
+diff --git a/src/peft/tuners/tuners_utils.py b/src/peft/tuners/tuners_utils.py
+index e915e9ff45..ea2c35dc5d 100644
+--- a/src/peft/tuners/tuners_utils.py
++++ b/src/peft/tuners/tuners_utils.py
+@@ -47,6 +47,7 @@
+ from peft.utils.integrations import TpMeshDimRegistry, init_empty_weights
+ from peft.utils.other import (
+     AuxiliaryTrainingWrapper,
++    ModulesToSaveWrapper,
+     _get_module_names_tied_with_embedding,
+     _set_adapter,
+     _set_layer_requires_grad,
+@@ -722,6 +723,11 @@ def _unload_and_optionally_merge(
+     ) -> None:
+         if merge:
+             self._check_merge_allowed()
++            if adapter_names:
++                # Reject ambiguous saved-module selections before merging or unloading any layers.
++                for module in self.model.modules():
++                    if isinstance(module, ModulesToSaveWrapper):
++                        module.check_set_adapter(adapter_names)
+ 
+         # visit all modules except those inside tuner layers (e.g. lora_A), note that the tuner layers themselves must
+         # be part of the list, as they are the ones being unloaded; a module lies inside a tuner layer if its parent
+diff --git a/src/peft/utils/other.py b/src/peft/utils/other.py
+index 1d70f8546d..10fba92bb8 100644
+--- a/src/peft/utils/other.py
++++ b/src/peft/utils/other.py
+@@ -857,21 +857,19 @@ def unload_and_optionally_merge_module(
+     ) -> torch.nn.Module:
+         """Return the module that replaces this wrapper when unloading the PEFT model.
+ 
+-        When merging, this is the modules_to_save copy of the active adapter, so that the trained weights are kept. If
+-        that copy is itself a tuner layer, it is merged first. Without merging, or if no adapter is active on this
+-        wrapper, the original module is returned, i.e. the base model is restored.
++        When merging, retain the selected adapter's modules_to_save copy, defaulting to the active adapter. If that
++        copy is itself a tuner layer, it is merged first. Without merging, or if no selected adapter targets this
++        wrapper, return the original module.
+         """
+-        if not self.active_adapters:
+-            # none of the modules_to_save adapters of this module are active, e.g. because the model's active adapter
+-            # does not use modules_to_save on this module; like in forward, the original module is used in this case
++        if not merge:
+             return self.original_module
+ 
+-        if not merge:
+-            # without merging, unloading should give back the base model, so the original module is returned instead
+-            # of the trained modules_to_save copy
++        selected_adapters = self.active_adapters if adapter_names is None else adapter_names
++        adapter_name = self.check_set_adapter(selected_adapters) if selected_adapters else None
++        if adapter_name is None:
+             return self.original_module
+ 
+-        new_module = self.modules_to_save[self.active_adapter]
++        new_module = self.modules_to_save[adapter_name]
+ 
+         # TODO: not sure if this is still a sensible thing to do. We would basically have to
+         # do the same checks as `_unload_and_optionally_merge` to support MHA, for example.
+diff --git a/tests/test_custom_models.py b/tests/test_custom_models.py
+index 5b0e82fba1..ce0f133f13 100644
+--- a/tests/test_custom_models.py
++++ b/tests/test_custom_models.py
+@@ -1411,6 +1411,13 @@ def _reset_unilora_theta_d(model, config, adapter_name="default"):
+     next(row for row in TEST_CASES if row[2] is config_cls) for config_cls in ALL_PEFT_CONFIG_CLASSES
+ ]
+ 
++MODULES_TO_SAVE_TEST_CASES = []
++for config_cls in ALL_PEFT_CONFIG_CLASSES:
++    for case in TEST_CASES:
++        if case[1] == "MLP" and case[2] is config_cls and case[3].get("modules_to_save"):
++            MODULES_TO_SAVE_TEST_CASES.append(case)
++            break
++
+ # For this test matrix, each tuple consists of:
+ # - test name
+ # - tuner method
+@@ -2681,6 +2688,14 @@ def test_merge_layers(self, test_name, model_id, config_cls, config_kwargs):
+         config_kwargs = set_init_weights_false(config_cls, config_kwargs)
+         self._test_merge_layers(model_id, config_cls, config_kwargs)
+ 
++    @pytest.mark.parametrize(
++        "test_name, model_id, config_cls, config_kwargs",
++        MODULES_TO_SAVE_TEST_CASES,
++    )
++    def test_merge_layers_modules_to_save_selection(self, test_name, model_id, config_cls, config_kwargs):
++        config_kwargs = set_init_weights_false(config_cls, config_kwargs)
++        self._test_merge_layers_multi(model_id, config_cls, config_kwargs)
++
+     @pytest.mark.parametrize("test_name, model_id, config_cls, config_kwargs", TEST_CASES)
+     def test_merge_layers_fp16(self, test_name, model_id, config_cls, config_kwargs):
+         _skip_if_merging_not_supported(model_id, config_cls, config_kwargs)
+diff --git a/tests/test_other.py b/tests/test_other.py
+index c1a53d2408..db93858fa5 100644
+--- a/tests/test_other.py
++++ b/tests/test_other.py
+@@ -536,6 +536,48 @@ def test_unload_modules_to_save(self, mlp, config_cls, config_kwargs, unload_met
+             assert unloaded.lin1 is trained_lin1
+             assert torch.allclose(out_unloaded, out_peft, atol=1e-6, rtol=1e-6)
+ 
++    @pytest.mark.parametrize(
++        "active_adapter, adapter_names",
++        [
++            ("default", ["other"]),
++            ("default", []),
++            ("other", ["other", "default"]),
++        ],
++    )
++    def test_merge_modules_to_save_partial_selection(self, mlp, active_adapter, adapter_names):
++        # Only "default" has a saved lin1 copy. Export must follow adapter_names rather than the active adapter:
++        # ["other"] and [] restore the original lin1, while ["other", "default"] retains the saved copy.
++        x = torch.randn(4, 8)
++        original_lin1 = mlp.lin1
++        model = get_peft_model(mlp, LoraConfig(target_modules=["lin0"], modules_to_save=["lin1"])).eval()
++        model.add_adapter("other", LoraConfig(target_modules=["lin0"]))
++        saved_lin1 = model.base_model.model.lin1.modules_to_save["default"]
++        saved_lin1.reset_parameters()
++
++        expected_module = saved_lin1 if "default" in adapter_names else original_lin1
++        # Both backbone adapters are no-ops, so only the selected saved module affects the expected output.
++        expected = expected_module(model.base_model.model.lin0(x))
++        model.set_adapter(active_adapter)
++
++        merged = model.merge_and_unload(adapter_names=adapter_names)
++
++        assert merged.lin1 is expected_module
++        torch.testing.assert_close(merged(x), expected)
++
++    def test_merge_modules_to_save_ambiguous_selection_leaves_model_unchanged(self, mlp):
++        config = LoraConfig(target_modules=["lin0"], modules_to_save=["lin1"], init_lora_weights=False)
++        other_config = copy.deepcopy(config)
++        model = get_peft_model(mlp, config).eval()
++        model.add_adapter("other", other_config)
++        state_dict = {key: value.clone() for key, value in model.state_dict().items()}
++
++        with pytest.raises(ValueError, match="Only one adapter"):
++            model.merge_and_unload(adapter_names=["default", "other"])
++
++        assert model.state_dict().keys() == state_dict.keys()
++        for key, value in model.state_dict().items():
++            torch.testing.assert_close(value, state_dict[key])
++
+     # Trainable tokens are used either alongside LoRA via trainable_token_indices, or as a standalone PEFT method
+     @pytest.mark.parametrize(
+         "config_cls, config_kwargs",
+diff --git a/tests/testing_common.py b/tests/testing_common.py
+index 8224334317..82580eeaf9 100644
+--- a/tests/testing_common.py
++++ b/tests/testing_common.py
+@@ -802,6 +802,11 @@ def _test_merge_layers_multi(self, model_id, config_cls, config_kwargs):
+ 
+             torch.manual_seed(1)
+             model.add_adapter("adapter-2", config)
++            # Saved modules must differ so exporting an inactive adapter also checks which copy is retained.
++            for module in model.modules():
++                if isinstance(module, ModulesToSaveWrapper):
++                    for parameter in module.modules_to_save["adapter-2"].parameters():
++                        torch.nn.init.normal_(parameter, std=0.1)
+             model.set_adapter("adapter-2")
+             model.eval()
+ 
+@@ -830,14 +835,6 @@ def _test_merge_layers_multi(self, model_id, config_cls, config_kwargs):
+ 
+             model_copy = copy.deepcopy(model)
+             model_copy_2 = copy.deepcopy(model)
+-            model_merged_all = model.merge_and_unload(adapter_names=["adapter-2", "default"])
+-
+-            with torch.inference_mode():
+-                logits_merged_all = model_merged_all(**dummy_input)[0]
+-
+-            assert not torch.allclose(logits_merged_all, logits_adapter_2, atol=atol, rtol=rtol)
+-            assert not torch.allclose(logits_merged_all, logits_adapter_1, atol=atol, rtol=rtol)
+-
+             model_merged_adapter_2 = model_copy.merge_and_unload(adapter_names=["adapter-2"])
+ 
+             with torch.inference_mode():
+@@ -852,6 +849,17 @@ def _test_merge_layers_multi(self, model_id, config_cls, config_kwargs):
+ 
+             assert torch.allclose(logits_merged_adapter_default, logits_adapter_1, atol=atol, rtol=rtol)
+ 
++            if any(isinstance(module, ModulesToSaveWrapper) for module in model.modules()):
++                with pytest.raises(ValueError, match="Only one adapter"):
++                    model.merge_and_unload(adapter_names=["adapter-2", "default"])
++            else:
++                model_merged_all = model.merge_and_unload(adapter_names=["adapter-2", "default"])
++                with torch.inference_mode():
++                    logits_merged_all = model_merged_all(**dummy_input)[0]
++
++                assert not torch.allclose(logits_merged_all, logits_adapter_2, atol=atol, rtol=rtol)
++                assert not torch.allclose(logits_merged_all, logits_adapter_1, atol=atol, rtol=rtol)
++
+     def _test_merge_layers_is_idempotent(self, model_id, config_cls, config_kwargs):
+         _skip_if_merging_not_supported(model_id, config_cls, config_kwargs)
+         _skip_if_conv1d_not_supported(model_id, config_cls, config_kwargs)

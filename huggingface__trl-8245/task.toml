@@ -1,0 +1,63 @@
+version = "1.0"
+
+[task]
+name = "default/huggingface__trl-8245"
+description = "Remove `adjusted_mfu`, which nothing calls"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "trl",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "huggingface/trl"
+ref = "3ba02a9de41da448b35001dd6153b71e2f6e453d"
+reference = "https://github.com/huggingface/trl/pull/8245"
+source_access = "auto"
+built_at = "2026-11-11T14:23:02.579921+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:778a3812206ce9c839a58f289f882a4d6b79283c454094d9d246a61448df8dcc"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-10T17:00:57Z"
+diff_format = "unified"
+context_files = [
+    "tests/test_utils.py",
+    "trl/trainer/utils.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 71
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

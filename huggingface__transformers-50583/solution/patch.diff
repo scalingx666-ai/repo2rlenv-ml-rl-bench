@@ -1,0 +1,281 @@
+diff --git a/docs/source/en/chat_extras.md b/docs/source/en/chat_extras.md
+index b52b9fdb5d7d..cf1bfb4882f9 100644
+--- a/docs/source/en/chat_extras.md
++++ b/docs/source/en/chat_extras.md
+@@ -141,6 +141,8 @@ for chat template authors who need to access the JSON schema to render the tool
+ 
+ The [`~PreTrainedTokenizerBase.apply_chat_template`] method uses the [get_json_schema](https://github.com/huggingface/transformers/blob/14561209291255e51c55260306c7d00c159381a5/src/transformers/utils/chat_template_utils.py#L205) function to convert Python callables to a JSON schema. This includes methods: `self` and `cls` are treated as implicit receiver arguments and are ignored.
+ 
++Type hints can be basic types like `int`, `float`, `str` and `bool`, `Literal` or `Enum` classes (which both become an `enum` of the allowed values), and `list`, `tuple`, `dict` and `Union` types containing those. Other classes, like dataclasses or Pydantic models, raise an error when they're used as an argument type, because there's no way to know what JSON they expect. If your tool needs one of those, write its JSON schema by hand and pass that instead. Return types are more relaxed, since the model never has to generate them: if the return type hint can't be converted, it's just left out of the schema.
++
+ ```py
+ from transformers.utils import get_json_schema
+ 
+diff --git a/src/transformers/utils/chat_template_utils.py b/src/transformers/utils/chat_template_utils.py
+index 323f64566c01..2c34040657db 100644
+--- a/src/transformers/utils/chat_template_utils.py
++++ b/src/transformers/utils/chat_template_utils.py
+@@ -20,6 +20,7 @@
+ from collections.abc import Callable, Mapping
+ from contextlib import contextmanager
+ from datetime import datetime
++from enum import Enum
+ from functools import lru_cache, partial
+ from inspect import isfunction
+ from typing import Any, Literal, Union, get_args, get_origin, get_type_hints, no_type_check
+@@ -82,7 +83,12 @@ class DocstringParsingException(Exception):
+     """Exception raised for errors in parsing docstrings to generate JSON schemas"""
+ 
+ 
+-def _get_json_schema_type(param_type: type) -> dict[str, str]:
++# The Python types that can be written directly as a JSON value, and so can appear in a schema "enum",
++# mapped to the name of their JSON schema type
++JSON_SCALAR_TYPES = {int: "integer", float: "number", str: "string", bool: "boolean", type(None): "null"}
++
++
++def _get_json_schema_type(param_type: type) -> dict[str, str] | None:
+     type_mapping = {
+         int: {"type": "integer"},
+         float: {"type": "number"},
+@@ -100,20 +106,47 @@ def _get_json_schema_type(param_type: type) -> dict[str, str]:
+         import torch
+ 
+         type_mapping[torch.Tensor] = {"type": "audio"}
+-    return type_mapping.get(param_type, {"type": "object"})
++    return type_mapping.get(param_type)
++
++
++def _enum_values_to_json_schema(values: list) -> dict:
++    # The "type" lists each JSON type that appears in the values once, in the order they first appear
++    value_types = list(dict.fromkeys(JSON_SCALAR_TYPES[type(value)] for value in values))
++    return {"type": value_types[0] if len(value_types) == 1 else value_types, "enum": values}
+ 
+ 
+ def _parse_type_hint(hint: str) -> dict:
+     origin = get_origin(hint)
+     args = get_args(hint)
+ 
+-    if origin is None:
+-        try:
+-            return _get_json_schema_type(hint)
+-        except KeyError:
++    if origin is None and isinstance(hint, type) and issubclass(hint, Enum):
++        # An Enum class becomes a JSON "enum" of its member values, since those are what the model has to generate
++        values = [member.value for member in hint]
++        if not values:
++            raise TypeHintParsingException(
++                f"The Enum {hint.__name__} has no members, so no value could ever match it."
++            )
++        if any(type(value) not in JSON_SCALAR_TYPES for value in values):
++            raise TypeHintParsingException(
++                f"The Enum {hint.__name__} has member values that cannot be written as JSON scalars.\n"
++                f"Values: {values}\n"
++                "Enum member values must be int, float, str, bool or None to be converted to a JSON schema."
++            )
++        return _enum_values_to_json_schema(values)
++
++    elif origin is None:
++        # Any other bare type is either one of the basic types we know how to map, or a custom class.
++        # We can't know what JSON a custom class expects, so we raise instead of guessing
++        json_schema_type = _get_json_schema_type(hint)
++        if json_schema_type is None:
+             raise TypeHintParsingException(
+-                "Couldn't parse this type hint, likely due to a custom class or object: ", hint
++                f"Couldn't convert the type hint {hint!r} to a JSON schema, likely because it is a custom class "
++                "or object. Supported type hints are basic types like int, float, str and bool, Enum classes, "
++                "typing.Literal, and list, tuple, dict and Union types containing those. If you need a more complex "
++                "schema than that, you can write the JSON schema for your tool by hand and pass that instead "
++                "of the function."
+             )
++        return json_schema_type
+ 
+     elif origin is Union or (hasattr(types, "UnionType") and origin is types.UnionType):
+         # Recurse into each of the subtypes in the Union, except None, which is handled separately at the end
+@@ -135,18 +168,9 @@ def _parse_type_hint(hint: str) -> dict:
+         return return_dict
+ 
+     elif origin is Literal and len(args) > 0:
+-        LITERAL_TYPES = (int, float, str, bool, type(None))
+-        args_types = []
+-        for arg in args:
+-            if type(arg) not in LITERAL_TYPES:
+-                raise TypeHintParsingException("Only the valid python literals can be listed in typing.Literal.")
+-            arg_type = _get_json_schema_type(type(arg)).get("type")
+-            if arg_type is not None and arg_type not in args_types:
+-                args_types.append(arg_type)
+-        return {
+-            "type": args_types.pop() if len(args_types) == 1 else list(args_types),
+-            "enum": list(args),
+-        }
++        if any(type(arg) not in JSON_SCALAR_TYPES for arg in args):
++            raise TypeHintParsingException("Only the valid python literals can be listed in typing.Literal.")
++        return _enum_values_to_json_schema(list(args))
+ 
+     elif origin is list:
+         if not args:
+@@ -212,7 +236,15 @@ def _convert_type_hints_to_json_schema(func: Callable) -> dict:
+     for param_name, param_type in type_hints.items():
+         if param_name == implicit_arg_name:
+             continue
+-        properties[param_name] = _parse_type_hint(param_type)
++        if param_name == "return":
++            # The model never generates the return value, so a return hint we can't convert shouldn't stop the
++            # tool from being used. We leave the return out of the schema rather than describing it wrongly.
++            try:
++                properties[param_name] = _parse_type_hint(param_type)
++            except TypeHintParsingException:
++                pass
++        else:
++            properties[param_name] = _parse_type_hint(param_type)
+ 
+     schema = {"type": "object", "properties": properties}
+     if required:
+diff --git a/tests/utils/test_chat_template_utils.py b/tests/utils/test_chat_template_utils.py
+index 1f5294147c6d..55de08410575 100644
+--- a/tests/utils/test_chat_template_utils.py
++++ b/tests/utils/test_chat_template_utils.py
+@@ -559,6 +559,144 @@ def fn(
+ 
+         self.assertEqual(schema["function"], expected_schema)
+ 
++    def test_enum_class(self):
++        class TemperatureFormat(Enum):
++            CELSIUS = "celsius"
++            FAHRENHEIT = "fahrenheit"
++
++        class Priority(Enum):
++            LOW = 1
++            HIGH = 2
++            # An alias of LOW, which should not show up as a separate value
++            DEFAULT = 1
++
++        def fn(temperature_format: TemperatureFormat, priorities: list[Priority], fallback: Priority | None = None):
++            """
++            Test function
++
++            Args:
++                temperature_format: The temperature format to use
++                priorities: The priorities to use
++                fallback: The fallback priority
++            """
++            return -40.0
++
++        # Enum classes should become an enum of their member values, including when they're nested in other hints
++        schema = get_json_schema(fn)
++        expected_schema = {
++            "name": "fn",
++            "description": "Test function",
++            "parameters": {
++                "type": "object",
++                "properties": {
++                    "temperature_format": {
++                        "type": "string",
++                        "enum": ["celsius", "fahrenheit"],
++                        "description": "The temperature format to use",
++                    },
++                    "priorities": {
++                        "type": "array",
++                        "items": {"type": "integer", "enum": [1, 2]},
++                        "description": "The priorities to use",
++                    },
++                    "fallback": {
++                        "type": "integer",
++                        "enum": [1, 2],
++                        "nullable": True,
++                        "description": "The fallback priority",
++                    },
++                },
++                "required": ["temperature_format", "priorities"],
++            },
++        }
++
++        self.assertEqual(schema["function"], expected_schema)
++
++    def test_enum_class_with_non_json_values_fails(self):
++        class Point(Enum):
++            ORIGIN = (0, 0)
++
++        def fn(x: Point):
++            """
++            Test function
++
++            Args:
++                x: The input
++            """
++            return x
++
++        # The model can only generate JSON scalars, so there's no way for it to pick one of these members
++        with self.assertRaises(TypeHintParsingException):
++            get_json_schema(fn)
++
++    def test_custom_class_fails(self):
++        @dataclasses.dataclass
++        class Address:
++            city: str
++
++        def fn(x: Address):
++            """
++            Test function
++
++            Args:
++                x: The input
++            """
++            return x
++
++        def nested_fn(x: list[Address]):
++            """
++            Test function
++
++            Args:
++                x: The input
++            """
++            return x
++
++        # We don't know what JSON a custom class expects, so these should raise rather than guessing "object"
++        for tool in (fn, nested_fn):
++            with self.assertRaisesRegex(TypeHintParsingException, "Address"):
++                get_json_schema(tool)
++
++    def test_custom_class_return_is_omitted(self):
++        @dataclasses.dataclass
++        class Address:
++            city: str
++
++        def fn(x: int) -> Address:
++            """
++            Test function
++
++            Args:
++                x: The input
++
++            Returns:
++                The address
++            """
++            return x
++
++        def nested_fn(x: int) -> list[Address]:
++            """
++            Test function
++
++            Args:
++                x: The input
++            """
++            return x
++
++        # The model never generates the return value, so a return hint we can't convert should be left out
++        # of the schema instead of making the whole tool unusable
++        expected_schema = {
++            "name": "fn",
++            "description": "Test function",
++            "parameters": {
++                "type": "object",
++                "properties": {"x": {"type": "integer", "description": "The input"}},
++                "required": ["x"],
++            },
++        }
++        self.assertEqual(get_json_schema(fn)["function"], expected_schema)
++        self.assertEqual(get_json_schema(nested_fn)["function"], {**expected_schema, "name": "nested_fn"})
++
+     def test_multiline_docstring_with_types(self):
+         def fn(x: int, y: int):
+             """

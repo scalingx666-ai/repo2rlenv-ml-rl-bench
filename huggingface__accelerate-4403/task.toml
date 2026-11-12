@@ -1,0 +1,64 @@
+version = "1.0"
+
+[task]
+name = "default/huggingface__accelerate-4403"
+description = "Fsdp2 keep output dtype"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "accelerate",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "huggingface/accelerate"
+ref = "5dd7661443e34c41b171c0c7c331bc37cd0dbcf5"
+reference = "https://github.com/huggingface/accelerate/pull/4403"
+source_access = "auto"
+built_at = "2026-11-11T14:24:52.514079+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:245f585ead25aa326923237f0515fb881795bf2e54ae04ab43d977e6405b08c7"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-10-14T16:00:17Z"
+diff_format = "unified"
+context_files = [
+    "src/accelerate/utils/dataclasses.py",
+    "tests/distributed/test_distributed_fsdp.py",
+    "tests/fsdp/test_fsdp.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 28
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

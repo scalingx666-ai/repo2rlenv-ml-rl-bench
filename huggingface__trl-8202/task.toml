@@ -1,0 +1,65 @@
+version = "1.0"
+
+[task]
+name = "default/huggingface__trl-8202"
+description = "Fix the max_tool_calling_iterations docstring"
+
+[metadata]
+difficulty = "medium"
+category = "bugfix"
+keywords = [
+    "trl",
+    "pr_diff",
+]
+
+[metadata.repo2env]
+pipeline = "pr_diff"
+pipeline_version = "0.3.0"
+repo = "huggingface/trl"
+ref = "5a423556bc32fe47504e20d661b0f9adc9aa1083"
+reference = "https://github.com/huggingface/trl/pull/8202"
+source_access = "auto"
+built_at = "2026-11-11T14:23:45.679188+00:00"
+reward_kinds = [
+    "diff_similarity",
+]
+spec_version = "0.2.0"
+content_hash = "sha256:40f938b4e236bd072610d901e8b23da5623f94373f54a48b4a3be41f6a804d9c"
+
+[metadata.repo2env.pr_diff]
+pr_merged_at = "2026-11-10T09:38:29Z"
+diff_format = "unified"
+context_files = [
+    "docs/source/distillation_trainer.md",
+    "docs/source/grpo_trainer.md",
+    "trl/trainer/distillation_config.py",
+    "trl/trainer/grpo_config.py",
+]
+
+[metadata.repo2env.reward_calibration]
+baseline_reward = 0.0
+loc_changed = 28
+difficulty = "medium"
+
+[metadata.repo2env.evaluation]
+schema_version = "1"
+status = "unverified"
+stage = "generation"
+reason_codes = [
+    "validation_not_run",
+]
+detail = "Generated task; validation has not been established."
+provenance = "unknown"
+evidence = []
+
+[metadata.repo2env.reproducibility]
+mode = "local_only"
+image_ref = "python:3.12-slim"
+image_tag = "python:3.12-slim"
+image_visibility = "private"
+
+[agent]
+timeout_sec = 1800.0
+
+[verifier]
+timeout_sec = 300.0

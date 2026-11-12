@@ -1,0 +1,39 @@
+diff --git a/.github/workflows/build_documentation.yml b/.github/workflows/build_documentation.yml
+index 12fe1ee0e91..8479cb08956 100644
+--- a/.github/workflows/build_documentation.yml
++++ b/.github/workflows/build_documentation.yml
+@@ -10,7 +10,7 @@ on:
+ 
+ jobs:
+   build:
+-    uses: huggingface/doc-builder/.github/workflows/build_main_documentation.yml@9fc8a41d7729c424fdb2192f2f85ff63102ec9a3  # main
++    uses: huggingface/doc-builder/.github/workflows/build_main_documentation.yml@145b9d4f6ab65ad3af87c66773b2c43294e52446  # main
+     with:
+       commit_sha: ${{ github.sha }}
+       package: datasets
+diff --git a/.github/workflows/build_pr_documentation.yml b/.github/workflows/build_pr_documentation.yml
+index b45d23b93e0..30484580fa1 100644
+--- a/.github/workflows/build_pr_documentation.yml
++++ b/.github/workflows/build_pr_documentation.yml
+@@ -9,7 +9,7 @@ concurrency:
+ 
+ jobs:
+   build:
+-    uses: huggingface/doc-builder/.github/workflows/build_pr_documentation.yml@9fc8a41d7729c424fdb2192f2f85ff63102ec9a3  # main
++    uses: huggingface/doc-builder/.github/workflows/build_pr_documentation.yml@145b9d4f6ab65ad3af87c66773b2c43294e52446  # main
+     with:
+       commit_sha: ${{ github.event.pull_request.head.sha }}
+       pr_number: ${{ github.event.number }}
+diff --git a/.github/workflows/upload_pr_documentation.yml b/.github/workflows/upload_pr_documentation.yml
+index 9490e90c763..4b51ea8bc63 100644
+--- a/.github/workflows/upload_pr_documentation.yml
++++ b/.github/workflows/upload_pr_documentation.yml
+@@ -8,7 +8,7 @@ on:
+ 
+ jobs:
+   build:
+-    uses: huggingface/doc-builder/.github/workflows/upload_pr_documentation.yml@9fc8a41d7729c424fdb2192f2f85ff63102ec9a3  # main
++    uses: huggingface/doc-builder/.github/workflows/upload_pr_documentation.yml@145b9d4f6ab65ad3af87c66773b2c43294e52446  # main
+     with:
+       package_name: datasets
+     secrets:
